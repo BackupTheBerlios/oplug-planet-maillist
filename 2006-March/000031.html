@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Oplug-planet] r29 - /
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/oplug-planet/2006-March/index.html" >
+   <LINK REL="made" HREF="mailto:oplug-planet%40lists.berlios.de?Subject=Re%3A%20%5BOplug-planet%5D%20r29%20-%20/&In-Reply-To=%3C200603251234.k2PCYA0I028938%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000030.html">
+   <LINK REL="Next"  HREF="000032.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Oplug-planet] r29 - /</H1>
+    <B>matador at BerliOS</B> 
+    <A HREF="mailto:oplug-planet%40lists.berlios.de?Subject=Re%3A%20%5BOplug-planet%5D%20r29%20-%20/&In-Reply-To=%3C200603251234.k2PCYA0I028938%40sheep.berlios.de%3E"
+       TITLE="[Oplug-planet] r29 - /">matador at berlios.de
+       </A><BR>
+    <I>Sat Mar 25 13:34:10 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000030.html">[Oplug-planet] r28 - /
+</A></li>
+        <LI>Next message: <A HREF="000032.html">[Oplug-planet] r30 - /
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#31">[ date ]</a>
+              <a href="thread.html#31">[ thread ]</a>
+              <a href="subject.html#31">[ subject ]</a>
+              <a href="author.html#31">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: matador
+Date: 2006-03-25 13:34:01 +0100 (Sat, 25 Mar 2006)
+New Revision: 29
+
+Modified:
+   rss_class.php
+Log:
+Juz dziala &lt;br/&gt; w bloggerze.. Niech zyje postep :]
+
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-25 12:07:59 UTC (rev 28)
++++ rss_class.php	2006-03-25 12:34:01 UTC (rev 29)
+@@ -109,6 +109,7 @@
+ 
+ 	function endElement($parser, $name) {
+ 		switch($name) {
++			case &quot;BR&quot; : if($this-&gt;isAtom) $this-&gt;rssData[$this-&gt;curID][&quot;div&quot;] .= &quot;&lt;br/&gt;&quot;; break;
+ 			case &quot;RSS&quot; : $this-&gt;isRSS = false; break;
+ 			case &quot;FEED&quot; : $this-&gt;isAtom = false; break;
+ 			case &quot;ITEM&quot; :
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000030.html">[Oplug-planet] r28 - /
+</A></li>
+	<LI>Next message: <A HREF="000032.html">[Oplug-planet] r30 - /
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#31">[ date ]</a>
+              <a href="thread.html#31">[ thread ]</a>
+              <a href="subject.html#31">[ subject ]</a>
+              <a href="author.html#31">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/oplug-planet">More information about the Oplug-planet
+mailing list</a><br>
+</body></html>

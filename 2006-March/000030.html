@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Oplug-planet] r28 - /
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/oplug-planet/2006-March/index.html" >
+   <LINK REL="made" HREF="mailto:oplug-planet%40lists.berlios.de?Subject=Re%3A%20%5BOplug-planet%5D%20r28%20-%20/&In-Reply-To=%3C200603251208.k2PC8B5r018314%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000034.html">
+   <LINK REL="Next"  HREF="000031.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Oplug-planet] r28 - /</H1>
+    <B>matador at BerliOS</B> 
+    <A HREF="mailto:oplug-planet%40lists.berlios.de?Subject=Re%3A%20%5BOplug-planet%5D%20r28%20-%20/&In-Reply-To=%3C200603251208.k2PC8B5r018314%40sheep.berlios.de%3E"
+       TITLE="[Oplug-planet] r28 - /">matador at berlios.de
+       </A><BR>
+    <I>Sat Mar 25 13:08:11 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000034.html">[Oplug-planet] r27 - /
+</A></li>
+        <LI>Next message: <A HREF="000031.html">[Oplug-planet] r29 - /
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#30">[ date ]</a>
+              <a href="thread.html#30">[ thread ]</a>
+              <a href="subject.html#30">[ subject ]</a>
+              <a href="author.html#30">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: matador
+Date: 2006-03-25 13:07:59 +0100 (Sat, 25 Mar 2006)
+New Revision: 28
+
+Modified:
+   go_planet.php
+   rss_class.php
+Log:
+Utworzylem funkcje publiczne do wyciagania danych z klasy, dla wiekszej 
+kontroli..
+
+
+Modified: go_planet.php
+===================================================================
+--- go_planet.php	2006-03-25 11:32:19 UTC (rev 27)
++++ go_planet.php	2006-03-25 12:07:59 UTC (rev 28)
+@@ -31,9 +31,9 @@
+ 
+ while($a&lt;=$rss-&gt;curID) {
+ 	print &quot;&lt;div class=\&quot;notka\&quot;&gt;&quot;;
+-	print &quot;&lt;h2 class=\&quot;tytul\&quot;&gt;&quot;.$rss-&gt;rssData[$a][&quot;title&quot;].&quot;&lt;/h2&gt;&quot;;
++	print &quot;&lt;h2 class=\&quot;tytul\&quot;&gt;&quot;.$rss-&gt;get_title($a).&quot;&lt;/h2&gt;&quot;;
+ 	print &quot;&lt;div class=\&quot;data\&quot;&gt;&quot;.$rss-&gt;get_data_string($a).&quot;&lt;/div&gt;&quot;;
+-	print &quot;&lt;div class=\&quot;tresc\&quot;&gt;&quot;.$rss-&gt;rssData[$a][&quot;div&quot;].&quot;&lt;/div&gt;&quot;;
++	print &quot;&lt;div class=\&quot;tresc\&quot;&gt;&quot;.$rss-&gt;get_content($a).&quot;&lt;/div&gt;&quot;;
+ 	print &quot;&lt;/div&gt;&quot;;
+ 	$a++;
+ }
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-25 11:32:19 UTC (rev 27)
++++ rss_class.php	2006-03-25 12:07:59 UTC (rev 28)
+@@ -3,7 +3,9 @@
+ // Na razie nie jest to duzo, ale od czegos trzeba zaczac...
+ 
+ //Metody publiczne:
+-//	RSS(); - konstruktor;
++//	RSS($chanfile); - konstruktor; Jako parametr pobiera nazwe pliku z kanalami.
++//  print_credits() - wyswietla info..
++//  get_data_string($id) - wyswietla date posta o numerze $id..
+ 
+ class RSS {
+ 	var $debug = true; // flaga zarezerwowana
+@@ -50,10 +52,19 @@
+ 
+ 	}
+ 
++
++	function get_title($id) {
++		return $this-&gt;rssData[$id][&quot;title&quot;];
++	}
++
+ 	function get_data_string($id) {
+ 		return $this-&gt;rssData[$id][&quot;date&quot;][&quot;day&quot;].&quot;/&quot;.$this-&gt;rssData[$id][&quot;date&quot;][&quot;month&quot;].&quot;/&quot;.$this-&gt;rssData[$id][&quot;date&quot;][&quot;year&quot;];
+ 	}
+ 
++	function get_content($id) {
++		return $this-&gt;rssData[$id][&quot;div&quot;];
++	}
++
+ 	function get_channels($chanfile) {
+ 		
+ 		$this-&gt;channels = file($chanfile);
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000034.html">[Oplug-planet] r27 - /
+</A></li>
+	<LI>Next message: <A HREF="000031.html">[Oplug-planet] r29 - /
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#30">[ date ]</a>
+              <a href="thread.html#30">[ thread ]</a>
+              <a href="subject.html#30">[ subject ]</a>
+              <a href="author.html#30">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/oplug-planet">More information about the Oplug-planet
+mailing list</a><br>
+</body></html>

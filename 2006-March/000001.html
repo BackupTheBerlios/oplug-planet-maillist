@@ -1,0 +1,264 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Oplug-planet] r9 - /
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/oplug-planet/2006-March/index.html" >
+   <LINK REL="made" HREF="mailto:oplug-planet%40lists.berlios.de?Subject=Re%3A%20%5BOplug-planet%5D%20r9%20-%20/&In-Reply-To=%3C200603240941.k2O9fxah007463%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000000.html">
+   <LINK REL="Next"  HREF="000002.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Oplug-planet] r9 - /</H1>
+    <B>matador at BerliOS</B> 
+    <A HREF="mailto:oplug-planet%40lists.berlios.de?Subject=Re%3A%20%5BOplug-planet%5D%20r9%20-%20/&In-Reply-To=%3C200603240941.k2O9fxah007463%40sheep.berlios.de%3E"
+       TITLE="[Oplug-planet] r9 - /">matador at berlios.de
+       </A><BR>
+    <I>Fri Mar 24 10:41:59 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000000.html">[Oplug-planet] r8 - /
+</A></li>
+        <LI>Next message: <A HREF="000002.html">[Oplug-planet] r10 - /
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#1">[ date ]</a>
+              <a href="thread.html#1">[ thread ]</a>
+              <a href="subject.html#1">[ subject ]</a>
+              <a href="author.html#1">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: matador
+Date: 2006-03-24 10:41:55 +0100 (Fri, 24 Mar 2006)
+New Revision: 9
+
+Added:
+   channels.rss
+Modified:
+   rss_class.php
+Log:
+Dodalem plik w ktorym powinna zawierac sie lista kanalow do 
+przegladniecia.. (channels.rss)
+
+W klasie RSS male zmiany:
+Juz konkretna obsluga jednego z najpopularniejszych blogow, czyli 
+Bloggera i jak na razie tylko bloggera..
+
+metoda tworzaca plik wynikowy wciaz nie istnieje...
+Tymczasowo posty wypisywane sa w przegladarce..
+
+
+Added: channels.rss
+===================================================================
+--- channels.rss	2006-03-23 22:51:11 UTC (rev 8)
++++ channels.rss	2006-03-24 09:41:55 UTC (rev 9)
+@@ -0,0 +1 @@
++<A HREF="http://oplug.blogspot.com/atom.xml">http://oplug.blogspot.com/atom.xml</A>
+\ No newline at end of file
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-23 22:51:11 UTC (rev 8)
++++ rss_class.php	2006-03-24 09:41:55 UTC (rev 9)
+@@ -2,50 +2,72 @@
+ // Klasa RSS umozliwia odczytywanie kanalow RSS i przetwarzanie interesujacych nas informacji na HTML.
+ // Na razie nie jest to duzo, ale od czegos trzeba zaczac...
+ 
++//Metody publiczne:
++//	RSS(); - konstruktor;
++//	RSS::print_post($post_id); - wyswietlenio okreslonego posta
++
+ class RSS {
+-	var $debug = true;
++	var $debug = true; // flaga zarezerwowana
+ 
+ 	var $url_base = &quot;<A HREF="http://linux.opole.pl/">http://linux.opole.pl/</A>&quot;;
+-	var $example_rss_chan = &quot;<A HREF="http://www.linux.pl/rss.php">http://www.linux.pl/rss.php</A>&quot;;
++	var $filename = &quot;planeta.php&quot;; // Plik do wygenerowania
++	var $filename_short = &quot;planetka.php&quot;; // plik ze skrotami..
++	var $chanfile = &quot;channels.rss&quot;; // plik z kanalami w postaci URL
++	var $channels = array(); // tablica kanalow do przegladniecia
+ 	var $version = &quot;1.0&quot;;
+ 
+-	var $RSSparser;
++	var $RSSparser; // Maszynka do wyciagania informacji z RSS :]
+ 
+ 	var $rssVersion = 2.0;
+ 	var $rssInfo = array(); // Info na tema feeda
+ 	var $rssData = array(); // A tutaj wlasnie beda wszystkie informacje wyciagniete z RSS'a
+ 
+-	var $file=&quot;data.xml&quot;;
+-
+ 	var $curID = -1;
+-	var $inChannel = false;
+-	var $inItem = false;
+-	var $isTitle = false;
+-	var $isLink = false;
+-	var $isDesc = false;
++	var $inEntry = false;
++	var $isDate = false;
++	var $isEntryTitle = false;
++	var $isDiv = false;
++	var $isID = false;
+ 
++	
+ 
+ 	function RSS() {
+ 		print &quot;&lt;br/&gt;RSS feed reader v&quot; . $this-&gt;version . &quot; by OpLUG&lt;br/&gt;&quot;;
+-		$this-&gt;parse($this-&gt;example_rss_chan);
++		print &quot;Now Blogger support only&lt;br/&gt;&quot;;
+ 
+-		//przyladowy post
+-		print &quot;&lt;br/&gt;&quot;.$this-&gt;rssInfo[&quot;title&quot;].&quot;&lt;br/&gt;&quot;;
+-		print &quot;&lt;br/&gt;&lt;b&gt;&quot;.$this-&gt;rssData[0][&quot;title&quot;].&quot;&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;&quot;;
+-		print $this-&gt;rssData[0][&quot;description&quot;].&quot;&lt;br/&gt;&quot;;
++		$this-&gt;get_channels($this-&gt;chanfile);
++
++		$this-&gt;parse($this-&gt;channels[0]);
++		$this-&gt;print_to_file($filename);
++
+ 	}
+ 
++	function get_channels($chanfile) {
++		
++		$this-&gt;channels = file($chanfile);
++		if(!($this-&gt;channels[0])) die(&quot;Brak kanalow.. Sprawd&#378; plik &quot;.$chanfile.&quot;&lt;br/&gt;&quot;);
++	return false;
++	}
++
++	function print_to_file($filename) {
++//		if (!($fp = fopen($filename, &quot;a&quot;))) {
++//  		 die(&quot;Nie moge otworzyc pliku &quot;.$filename.&quot;&lt;br/&gt;&quot;);
++//		}
++		print $this-&gt;rssData[1]['title'];
++		
++	}
++
+ 	function parse($channel) {
+ 		$this-&gt;RSSparser = xml_parser_create();
+ 		xml_set_element_handler($this-&gt;RSSparser,array(&amp;$this,&quot;startElement&quot;),array(&amp;$this,&quot;endElement&quot;));
+ 		xml_set_character_data_handler($this-&gt;RSSparser, array(&amp;$this, &quot;XMLcharacterData&quot;));
+ 		if (!($fp = fopen($channel, &quot;r&quot;))) {
+-  		 die(&quot;could not open XML input&quot;);
++  		 die(&quot;Nie moge otworzyc kanalu &quot;.$channel.&quot;. Zly adres???&quot;);
+ 		}
+ 
+ 		while ($data = fread($fp, 4096)) {
+    		if (!xml_parse($this-&gt;RSSparser, $data, feof($fp))) {
+-       	die(sprintf(&quot;XML error: %s at line %d&quot;,
++       	die(sprintf(&quot;Blad XML: %s at line %d&quot;,
+                    xml_error_string(xml_get_error_code($this-&gt;RSSparser)),
+                    xml_get_current_line_number($this-&gt;RSSparser)));
+    		}
+@@ -53,58 +75,34 @@
+ 		xml_parser_free($this-&gt;RSSparser);
+ 	}
+ 
+-	function startElement($parser, $name, $attrs)
+-	{
+-		if( $name == &quot;rss&quot; || $name == &quot;RSS&quot; ) $this-&gt;isRSS = true;
+- 
+-		if(! $this-&gt;isRSS ) $this-&gt;errError(16);
+- 
+-		switch( $name ){
+-			case &quot;rss&quot; : $this-&gt;rssVersion = $attrs[&quot;version&quot;]; break;
+-			case &quot;RSS&quot; : $this-&gt;rssVersion = $attrs[&quot;VERSION&quot;]; break;
+-			case &quot;channel&quot; :
+-			case &quot;CHANNEL&quot; : $this-&gt;inChannel = true; break;
+-			case &quot;item&quot; :
+-			case &quot;ITEM&quot; : $this-&gt;rssData[] = array(); $this-&gt;curID++; $this-&gt;inItem = true; break;
+-			case &quot;title&quot; :
+-			case &quot;TITLE&quot; : $this-&gt;isTitle = true; break;
+-			case &quot;link&quot; :
+-			case &quot;LINK&quot; : $this-&gt;isLink = true; break;
+-			case &quot;description&quot; :
+-			case &quot;DESCRIPTION&quot; : $this-&gt;isDesc = true; break;
++	function startElement($parser, $name, $attrs) {
++
++		switch($name) {
++			case &quot;GENERATOR&quot; : if($attrs[&quot;URL&quot;]!=&quot;<A HREF="http://www.blogger.com/">http://www.blogger.com/</A>&quot;) die(&quot;To nie jest blogger.. Koncze..&lt;br/&gt;&quot;);
++			case &quot;ENTRY&quot; : $this-&gt;inEntry = true; break;
++			case &quot;TITLE&quot; : $this-&gt;isEntryTitle = true; break;
++			case &quot;DIV&quot; : $this-&gt;isDiv = true; break;
++			case &quot;CREATED&quot; : $this-&gt;isDate = true; break;
+ 		}
++ 
++
+ 	}
+ 
+-	function endElement($parser, $name)
+-	{
+-		switch( $name ){
+-			case &quot;channel&quot; :
+-			case &quot;CHANNEL&quot; : $this-&gt;inChannel = false; break;
+-			case &quot;item&quot; :
+-			case &quot;ITEM&quot; : $this-&gt;inItem = false; break;
+-			case &quot;title&quot; :
+-			case &quot;TITLE&quot; : $this-&gt;isTitle = false; break;
+-			case &quot;link&quot; :
++	function endElement($parser, $name) {
++		switch($name) {
++			case &quot;ENTRY&quot; : $this-&gt;inEntry = false; break;
++			case &quot;TITLE&quot; : $this-&gt;isEntryTitle = false; break;
++			case &quot;DIV&quot; : $this-&gt;isDiv = false; break;
++			case &quot;CREATED&quot; : $this-&gt;isDate = false; break;
+ 			case &quot;LINK&quot; : $this-&gt;isLink = false; break;
+-			case &quot;description&quot; :
+-			case &quot;DESCRIPTION&quot; : $this-&gt;isDesc = false; break;
+ 		}
+ 	}
+ 
+-function XMLcharacterData($parser, $data){
+-	if( $this-&gt;inChannel )
+-		if(! $this-&gt;inItem ){
+-			if( $this-&gt;isTitle ) $this-&gt;rssInfo[&quot;title&quot;] = $data;
+-			if( $this-&gt;isLink ) $this-&gt;rssInfo[&quot;link&quot;] = $data;
+-		}else
+-			if( $this-&gt;inItem ){
+-				$curID = $this-&gt;curID;
+-			if( $this-&gt;isTitle )
+-				$this-&gt;rssData[$curID][&quot;title&quot;] = $data;
+-			if( $this-&gt;isLink )
+-				$this-&gt;rssData[$curID][&quot;link&quot;] = $data;
+-			if( $this-&gt;isDesc )
+-				$this-&gt;rssData[$curID][&quot;description&quot;] .= $data;
++	function XMLcharacterData($parser, $data){
++		if($this-&gt;inEntry) {
++			if($this-&gt;isDate) print &quot;&lt;br/&gt;&quot;.$data.&quot;&lt;br/&gt;&quot;;
++			if($this-&gt;isEntryTitle) print &quot;&lt;b&gt;&quot;.$data.&quot;&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;&quot;;
++			if($this-&gt;isDiv) print $data.&quot;&lt;br/&gt;&lt;br/&gt;&quot;;
+ 		}
+ 	}
+ 
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000000.html">[Oplug-planet] r8 - /
+</A></li>
+	<LI>Next message: <A HREF="000002.html">[Oplug-planet] r10 - /
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#1">[ date ]</a>
+              <a href="thread.html#1">[ thread ]</a>
+              <a href="subject.html#1">[ subject ]</a>
+              <a href="author.html#1">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/oplug-planet">More information about the Oplug-planet
+mailing list</a><br>
+</body></html>

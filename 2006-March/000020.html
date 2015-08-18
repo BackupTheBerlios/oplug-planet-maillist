@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Oplug-planet] r24 - /
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/oplug-planet/2006-March/index.html" >
+   <LINK REL="made" HREF="mailto:oplug-planet%40lists.berlios.de?Subject=Re%3A%20%5BOplug-planet%5D%20r24%20-%20/&In-Reply-To=%3C200603242135.k2OLZ4qi006235%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000019.html">
+   <LINK REL="Next"  HREF="000021.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Oplug-planet] r24 - /</H1>
+    <B>matador at BerliOS</B> 
+    <A HREF="mailto:oplug-planet%40lists.berlios.de?Subject=Re%3A%20%5BOplug-planet%5D%20r24%20-%20/&In-Reply-To=%3C200603242135.k2OLZ4qi006235%40sheep.berlios.de%3E"
+       TITLE="[Oplug-planet] r24 - /">matador at berlios.de
+       </A><BR>
+    <I>Fri Mar 24 22:35:04 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000019.html">[Oplug-planet] r23 - /
+</A></li>
+        <LI>Next message: <A HREF="000021.html">[Oplug-planet] r25 - /
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#20">[ date ]</a>
+              <a href="thread.html#20">[ thread ]</a>
+              <a href="subject.html#20">[ subject ]</a>
+              <a href="author.html#20">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: matador
+Date: 2006-03-24 22:35:04 +0100 (Fri, 24 Mar 2006)
+New Revision: 24
+
+Modified:
+   rss_class.php
+   style.css
+Log:
+Zapakowalem footer do klasy..
+W najblizsyzm czasie zabieram sie do poprawy obslugi bloggerowego Atomu, 
+gdyz jest on bardziej skomplikowany niz RSS feed i wciaz sa z nim 
+problemy..
+
+
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-24 21:02:48 UTC (rev 23)
++++ rss_class.php	2006-03-24 21:35:04 UTC (rev 24)
+@@ -44,6 +44,16 @@
+ 
+ 	}
+ 
++	function print_credits() {
++		print &quot;RSS feed reader v&quot; . $this-&gt;version . &quot; by OpLUG&lt;br/&gt;&quot;;
++		print &quot;RSS feed and Blogger Atom support&lt;br/&gt;&quot;;
++
++	}
++
++	function print_post($id) {
++		
++	}
++
+ 	function get_channels($chanfile) {
+ 		
+ 		$this-&gt;channels = file($chanfile);
+
+Modified: style.css
+===================================================================
+--- style.css	2006-03-24 21:02:48 UTC (rev 23)
++++ style.css	2006-03-24 21:35:04 UTC (rev 24)
+@@ -26,12 +26,20 @@
+ 		border-bottom: 1px solid #CCC;
+ 	}
+ 
++#credits {
++	width: 100%;
++	text-align: center;
++	border-top: 1px solid #000;
++	border-bottom: 1px solid #000;
++	background-color: #ddd;
++}
++
+ A:link {
+-	color: #bbb;
++	color: #777;
+ 	text-decoration: none;
+ }
+ 
+ A:visited {
+-	color: #bbb;
++	color: #777;
+ 	text-decoration: none;
+ }
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000019.html">[Oplug-planet] r23 - /
+</A></li>
+	<LI>Next message: <A HREF="000021.html">[Oplug-planet] r25 - /
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#20">[ date ]</a>
+              <a href="thread.html#20">[ thread ]</a>
+              <a href="subject.html#20">[ subject ]</a>
+              <a href="author.html#20">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/oplug-planet">More information about the Oplug-planet
+mailing list</a><br>
+</body></html>

@@ -1,0 +1,3489 @@
+From citizen at berlios.de  Thu Mar 23 23:51:14 2006
+From: citizen at berlios.de (citizen at berlios.de)
+Date: Thu, 23 Mar 2006 23:51:14 +0100
+Subject: [Oplug-planet] r8 - /
+Message-ID: <200603232251.k2NMpEG2015454@sheep.berlios.de>
+
+Author: citizen
+Date: 2006-03-23 23:51:11 +0100 (Thu, 23 Mar 2006)
+New Revision: 8
+
+Added:
+   go_planet.php
+Removed:
+   index.php
+Log:
+- zmiana nazwy, poniewaz zbieracz RSSow nie bedzie uruchamiany jako index.php
+
+
+Copied: go_planet.php (from rev 7, index.php)
+
+Deleted: index.php
+===================================================================
+--- index.php	2006-03-23 12:32:18 UTC (rev 7)
++++ index.php	2006-03-23 22:51:11 UTC (rev 8)
+@@ -1,11 +0,0 @@
+-<?
+-// Skrypt do pobieranie kanalow rss
+-// przeznaczony do cyklicznego uruchamiania
+-
+-echo "Gooo? Planet!";
+-
+-require_once("rss_class.php");
+-
+-$rss = new RSS();
+-
+-?>
+
+
+
+From matador at berlios.de  Fri Mar 24 10:41:59 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Fri, 24 Mar 2006 10:41:59 +0100
+Subject: [Oplug-planet] r9 - /
+Message-ID: <200603240941.k2O9fxah007463@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-24 10:41:55 +0100 (Fri, 24 Mar 2006)
+New Revision: 9
+
+Added:
+   channels.rss
+Modified:
+   rss_class.php
+Log:
+Dodalem plik w ktorym powinna zawierac sie lista kanalow do 
+przegladniecia.. (channels.rss)
+
+W klasie RSS male zmiany:
+Juz konkretna obsluga jednego z najpopularniejszych blogow, czyli 
+Bloggera i jak na razie tylko bloggera..
+
+metoda tworzaca plik wynikowy wciaz nie istnieje...
+Tymczasowo posty wypisywane sa w przegladarce..
+
+
+Added: channels.rss
+===================================================================
+--- channels.rss	2006-03-23 22:51:11 UTC (rev 8)
++++ channels.rss	2006-03-24 09:41:55 UTC (rev 9)
+@@ -0,0 +1 @@
++http://oplug.blogspot.com/atom.xml
+\ No newline at end of file
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-23 22:51:11 UTC (rev 8)
++++ rss_class.php	2006-03-24 09:41:55 UTC (rev 9)
+@@ -2,50 +2,72 @@
+ // Klasa RSS umozliwia odczytywanie kanalow RSS i przetwarzanie interesujacych nas informacji na HTML.
+ // Na razie nie jest to duzo, ale od czegos trzeba zaczac...
+ 
++//Metody publiczne:
++//	RSS(); - konstruktor;
++//	RSS::print_post($post_id); - wyswietlenio okreslonego posta
++
+ class RSS {
+-	var $debug = true;
++	var $debug = true; // flaga zarezerwowana
+ 
+ 	var $url_base = "http://linux.opole.pl/";
+-	var $example_rss_chan = "http://www.linux.pl/rss.php";
++	var $filename = "planeta.php"; // Plik do wygenerowania
++	var $filename_short = "planetka.php"; // plik ze skrotami..
++	var $chanfile = "channels.rss"; // plik z kanalami w postaci URL
++	var $channels = array(); // tablica kanalow do przegladniecia
+ 	var $version = "1.0";
+ 
+-	var $RSSparser;
++	var $RSSparser; // Maszynka do wyciagania informacji z RSS :]
+ 
+ 	var $rssVersion = 2.0;
+ 	var $rssInfo = array(); // Info na tema feeda
+ 	var $rssData = array(); // A tutaj wlasnie beda wszystkie informacje wyciagniete z RSS'a
+ 
+-	var $file="data.xml";
+-
+ 	var $curID = -1;
+-	var $inChannel = false;
+-	var $inItem = false;
+-	var $isTitle = false;
+-	var $isLink = false;
+-	var $isDesc = false;
++	var $inEntry = false;
++	var $isDate = false;
++	var $isEntryTitle = false;
++	var $isDiv = false;
++	var $isID = false;
+ 
++	
+ 
+ 	function RSS() {
+ 		print "<br/>RSS feed reader v" . $this->version . " by OpLUG<br/>";
+-		$this->parse($this->example_rss_chan);
++		print "Now Blogger support only<br/>";
+ 
+-		//przyladowy post
+-		print "<br/>".$this->rssInfo["title"]."<br/>";
+-		print "<br/><b>".$this->rssData[0]["title"]."</b><br/><br/>";
+-		print $this->rssData[0]["description"]."<br/>";
++		$this->get_channels($this->chanfile);
++
++		$this->parse($this->channels[0]);
++		$this->print_to_file($filename);
++
+ 	}
+ 
++	function get_channels($chanfile) {
++		
++		$this->channels = file($chanfile);
++		if(!($this->channels[0])) die("Brak kanalow.. Sprawd? plik ".$chanfile."<br/>");
++	return false;
++	}
++
++	function print_to_file($filename) {
++//		if (!($fp = fopen($filename, "a"))) {
++//  		 die("Nie moge otworzyc pliku ".$filename."<br/>");
++//		}
++		print $this->rssData[1]['title'];
++		
++	}
++
+ 	function parse($channel) {
+ 		$this->RSSparser = xml_parser_create();
+ 		xml_set_element_handler($this->RSSparser,array(&$this,"startElement"),array(&$this,"endElement"));
+ 		xml_set_character_data_handler($this->RSSparser, array(&$this, "XMLcharacterData"));
+ 		if (!($fp = fopen($channel, "r"))) {
+-  		 die("could not open XML input");
++  		 die("Nie moge otworzyc kanalu ".$channel.". Zly adres???");
+ 		}
+ 
+ 		while ($data = fread($fp, 4096)) {
+    		if (!xml_parse($this->RSSparser, $data, feof($fp))) {
+-       	die(sprintf("XML error: %s at line %d",
++       	die(sprintf("Blad XML: %s at line %d",
+                    xml_error_string(xml_get_error_code($this->RSSparser)),
+                    xml_get_current_line_number($this->RSSparser)));
+    		}
+@@ -53,58 +75,34 @@
+ 		xml_parser_free($this->RSSparser);
+ 	}
+ 
+-	function startElement($parser, $name, $attrs)
+-	{
+-		if( $name == "rss" || $name == "RSS" ) $this->isRSS = true;
+- 
+-		if(! $this->isRSS ) $this->errError(16);
+- 
+-		switch( $name ){
+-			case "rss" : $this->rssVersion = $attrs["version"]; break;
+-			case "RSS" : $this->rssVersion = $attrs["VERSION"]; break;
+-			case "channel" :
+-			case "CHANNEL" : $this->inChannel = true; break;
+-			case "item" :
+-			case "ITEM" : $this->rssData[] = array(); $this->curID++; $this->inItem = true; break;
+-			case "title" :
+-			case "TITLE" : $this->isTitle = true; break;
+-			case "link" :
+-			case "LINK" : $this->isLink = true; break;
+-			case "description" :
+-			case "DESCRIPTION" : $this->isDesc = true; break;
++	function startElement($parser, $name, $attrs) {
++
++		switch($name) {
++			case "GENERATOR" : if($attrs["URL"]!="http://www.blogger.com/") die("To nie jest blogger.. Koncze..<br/>");
++			case "ENTRY" : $this->inEntry = true; break;
++			case "TITLE" : $this->isEntryTitle = true; break;
++			case "DIV" : $this->isDiv = true; break;
++			case "CREATED" : $this->isDate = true; break;
+ 		}
++ 
++
+ 	}
+ 
+-	function endElement($parser, $name)
+-	{
+-		switch( $name ){
+-			case "channel" :
+-			case "CHANNEL" : $this->inChannel = false; break;
+-			case "item" :
+-			case "ITEM" : $this->inItem = false; break;
+-			case "title" :
+-			case "TITLE" : $this->isTitle = false; break;
+-			case "link" :
++	function endElement($parser, $name) {
++		switch($name) {
++			case "ENTRY" : $this->inEntry = false; break;
++			case "TITLE" : $this->isEntryTitle = false; break;
++			case "DIV" : $this->isDiv = false; break;
++			case "CREATED" : $this->isDate = false; break;
+ 			case "LINK" : $this->isLink = false; break;
+-			case "description" :
+-			case "DESCRIPTION" : $this->isDesc = false; break;
+ 		}
+ 	}
+ 
+-function XMLcharacterData($parser, $data){
+-	if( $this->inChannel )
+-		if(! $this->inItem ){
+-			if( $this->isTitle ) $this->rssInfo["title"] = $data;
+-			if( $this->isLink ) $this->rssInfo["link"] = $data;
+-		}else
+-			if( $this->inItem ){
+-				$curID = $this->curID;
+-			if( $this->isTitle )
+-				$this->rssData[$curID]["title"] = $data;
+-			if( $this->isLink )
+-				$this->rssData[$curID]["link"] = $data;
+-			if( $this->isDesc )
+-				$this->rssData[$curID]["description"] .= $data;
++	function XMLcharacterData($parser, $data){
++		if($this->inEntry) {
++			if($this->isDate) print "<br/>".$data."<br/>";
++			if($this->isEntryTitle) print "<b>".$data."</b><br/><br/>";
++			if($this->isDiv) print $data."<br/><br/>";
+ 		}
+ 	}
+ 
+
+
+
+From matador at berlios.de  Fri Mar 24 11:42:30 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Fri, 24 Mar 2006 11:42:30 +0100
+Subject: [Oplug-planet] r10 - /
+Message-ID: <200603241042.k2OAgUL4019482@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-24 11:42:29 +0100 (Fri, 24 Mar 2006)
+New Revision: 10
+
+Modified:
+   channels.rss
+   rss_class.php
+Log:
+Teraz klasa RSS obsluguje wszystkie blogi z serwisu blogger.com zawarte  
+w pliku channels.rss, jednak nie rozroznia jeszcze kategorii postow, ani 
+nie sortuje ich wg. daty.. 
+
+
+Modified: channels.rss
+===================================================================
+--- channels.rss	2006-03-24 09:41:55 UTC (rev 9)
++++ channels.rss	2006-03-24 10:42:29 UTC (rev 10)
+@@ -1 +1,2 @@
+-http://oplug.blogspot.com/atom.xml
+\ No newline at end of file
++http://oplug.blogspot.com/atom.xml
++http://jade-of-kamakura.blogspot.com/atom.xml
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-24 09:41:55 UTC (rev 9)
++++ rss_class.php	2006-03-24 10:42:29 UTC (rev 10)
+@@ -4,7 +4,6 @@
+ 
+ //Metody publiczne:
+ //	RSS(); - konstruktor;
+-//	RSS::print_post($post_id); - wyswietlenio okreslonego posta
+ 
+ class RSS {
+ 	var $debug = true; // flaga zarezerwowana
+@@ -33,27 +32,34 @@
+ 
+ 	function RSS() {
+ 		print "<br/>RSS feed reader v" . $this->version . " by OpLUG<br/>";
+-		print "Now Blogger support only<br/>";
+-
++		print "Now Blogger support only<br/><br/>";
++	
+ 		$this->get_channels($this->chanfile);
+ 
+-		$this->parse($this->channels[0]);
++		$a=0;
++
++		while($this->channels[$a]!=null) {
++			ereg('^.*xml',$this->channels[$a++],$chan);
++			$this->parse($chan[0]);
++		}
++
+ 		$this->print_to_file($filename);
++		
++	}
+ 
++	function print_to_file($filename) {
++		$a=0;
++		while($a<=$this->curID) {
++			print $this->rssData[$a]["title"]."<br/><br/>";
++			$a++;
++		}
++
+ 	}
+ 
+ 	function get_channels($chanfile) {
+ 		
+ 		$this->channels = file($chanfile);
+ 		if(!($this->channels[0])) die("Brak kanalow.. Sprawd? plik ".$chanfile."<br/>");
+-	return false;
+-	}
+-
+-	function print_to_file($filename) {
+-//		if (!($fp = fopen($filename, "a"))) {
+-//  		 die("Nie moge otworzyc pliku ".$filename."<br/>");
+-//		}
+-		print $this->rssData[1]['title'];
+ 		
+ 	}
+ 
+@@ -78,8 +84,8 @@
+ 	function startElement($parser, $name, $attrs) {
+ 
+ 		switch($name) {
+-			case "GENERATOR" : if($attrs["URL"]!="http://www.blogger.com/") die("To nie jest blogger.. Koncze..<br/>");
+-			case "ENTRY" : $this->inEntry = true; break;
++			case "GENERATOR" : if($attrs["URL"]!="http://www.blogger.com/") die("To nie jest blogger.. Koncze..<br/>"); break;
++			case "ENTRY" : $this->rssData[] = array(); $this->curID++; $this->inEntry = true; break;
+ 			case "TITLE" : $this->isEntryTitle = true; break;
+ 			case "DIV" : $this->isDiv = true; break;
+ 			case "CREATED" : $this->isDate = true; break;
+@@ -100,9 +106,10 @@
+ 
+ 	function XMLcharacterData($parser, $data){
+ 		if($this->inEntry) {
+-			if($this->isDate) print "<br/>".$data."<br/>";
+-			if($this->isEntryTitle) print "<b>".$data."</b><br/><br/>";
+-			if($this->isDiv) print $data."<br/><br/>";
++			$curID = $this->curID;
++			if($this->isDate) $this->rssData[$curID]["date"] = $data;
++			if($this->isEntryTitle) $this->rssData[$curID]["title"] = $data;
++			if($this->isDiv) $this->rssData[$curID]["dev"] = $data;
+ 		}
+ 	}
+ 
+
+
+
+From citizen at berlios.de  Fri Mar 24 16:46:21 2006
+From: citizen at berlios.de (citizen at berlios.de)
+Date: Fri, 24 Mar 2006 16:46:21 +0100
+Subject: [Oplug-planet] r11 - /
+Message-ID: <200603241546.k2OFkLs9027081@sheep.berlios.de>
+
+Author: citizen
+Date: 2006-03-24 16:46:19 +0100 (Fri, 24 Mar 2006)
+New Revision: 11
+
+Modified:
+   channels.rss
+   rss_class.php
+Log:
+- literowka
+
+
+Modified: channels.rss
+===================================================================
+--- channels.rss	2006-03-24 10:42:29 UTC (rev 10)
++++ channels.rss	2006-03-24 15:46:19 UTC (rev 11)
+@@ -1,2 +1,2 @@
+ http://oplug.blogspot.com/atom.xml
+-http://jade-of-kamakura.blogspot.com/atom.xml
++http://jade-of-kamakura.blogspot.com/atom.xml
+\ No newline at end of file
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-24 10:42:29 UTC (rev 10)
++++ rss_class.php	2006-03-24 15:46:19 UTC (rev 11)
+@@ -9,7 +9,7 @@
+ 	var $debug = true; // flaga zarezerwowana
+ 
+ 	var $url_base = "http://linux.opole.pl/";
+-	var $filename = "planeta.php"; // Plik do wygenerowania
++	var $filename = "index.html"; // Plik do wygenerowania
+ 	var $filename_short = "planetka.php"; // plik ze skrotami..
+ 	var $chanfile = "channels.rss"; // plik z kanalami w postaci URL
+ 	var $channels = array(); // tablica kanalow do przegladniecia
+@@ -18,7 +18,7 @@
+ 	var $RSSparser; // Maszynka do wyciagania informacji z RSS :]
+ 
+ 	var $rssVersion = 2.0;
+-	var $rssInfo = array(); // Info na tema feeda
++	var $rssInfo = array(); // Info na temat feeda
+ 	var $rssData = array(); // A tutaj wlasnie beda wszystkie informacje wyciagniete z RSS'a
+ 
+ 	var $curID = -1;
+
+
+
+From citizen at berlios.de  Fri Mar 24 17:00:46 2006
+From: citizen at berlios.de (citizen at berlios.de)
+Date: Fri, 24 Mar 2006 17:00:46 +0100
+Subject: [Oplug-planet] r12 - /
+Message-ID: <200603241600.k2OG0kpT029410@sheep.berlios.de>
+
+Author: citizen
+Date: 2006-03-24 17:00:43 +0100 (Fri, 24 Mar 2006)
+New Revision: 12
+
+Modified:
+   rss_class.php
+Log:
+- Dodanie tresci notek i kodowania
+
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-24 15:46:19 UTC (rev 11)
++++ rss_class.php	2006-03-24 16:00:43 UTC (rev 12)
+@@ -31,6 +31,9 @@
+ 	
+ 
+ 	function RSS() {
++		print "<html><head>";
++		print "<meta http-equiv=\"content-type\" content=\"application/xhtml+xml; charset=UTF-8\"/>";
++		print "</head><body>";
+ 		print "<br/>RSS feed reader v" . $this->version . " by OpLUG<br/>";
+ 		print "Now Blogger support only<br/><br/>";
+ 	
+@@ -45,12 +48,14 @@
+ 
+ 		$this->print_to_file($filename);
+ 		
++		print "</body></html>";		
+ 	}
+ 
+ 	function print_to_file($filename) {
+ 		$a=0;
+ 		while($a<=$this->curID) {
+-			print $this->rssData[$a]["title"]."<br/><br/>";
++			print "<h2>".$this->rssData[$a]["title"]."</h2>";
++			print "<p>".$this->rssData[$a]["dev"]."</p>";
+ 			$a++;
+ 		}
+ 
+@@ -115,4 +120,4 @@
+ 
+ }
+ 
+-?>
+\ No newline at end of file
++?>
+
+
+
+From matador at berlios.de  Fri Mar 24 17:49:08 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Fri, 24 Mar 2006 17:49:08 +0100
+Subject: [Oplug-planet] r13 - /
+Message-ID: <200603241649.k2OGn8jO001172@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-24 17:49:08 +0100 (Fri, 24 Mar 2006)
+New Revision: 13
+
+Modified:
+   rss_class.php
+Log:
+Klasa RSS doczekala sie obslugi Atomu Blogera tak samo jak tego do czego 
+zostala stworzona - czytania kanalow RSS...(np. blog.onet.pl)
+
+Nierozwiazany pozostaje problem konfliktu roznie kodowanych znakow.. 
+Propnuje wykorzystac do konwersji program iconv (w php), lecz jak do tej 
+pory nie udalo mi sie uzyskac zadowalajacych efektow..
+
+
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-24 16:00:43 UTC (rev 12)
++++ rss_class.php	2006-03-24 16:49:08 UTC (rev 13)
+@@ -28,6 +28,8 @@
+ 	var $isDiv = false;
+ 	var $isID = false;
+ 
++	var $isOnet = false;
++
+ 	
+ 
+ 	function RSS() {
+@@ -35,14 +37,14 @@
+ 		print "<meta http-equiv=\"content-type\" content=\"application/xhtml+xml; charset=UTF-8\"/>";
+ 		print "</head><body>";
+ 		print "<br/>RSS feed reader v" . $this->version . " by OpLUG<br/>";
+-		print "Now Blogger support only<br/><br/>";
++		print "RSS feed and Blogger Atom support<br/><br/>";
+ 	
+ 		$this->get_channels($this->chanfile);
+ 
+ 		$a=0;
+ 
+ 		while($this->channels[$a]!=null) {
+-			ereg('^.*xml',$this->channels[$a++],$chan);
++			ereg('^[A-Za-z0-9:\/\.\-]*',$this->channels[$a++],$chan);
+ 			$this->parse($chan[0]);
+ 		}
+ 
+@@ -54,8 +56,10 @@
+ 	function print_to_file($filename) {
+ 		$a=0;
+ 		while($a<=$this->curID) {
+-			print "<h2>".$this->rssData[$a]["title"]."</h2>";
+-			print "<p>".$this->rssData[$a]["dev"]."</p>";
++			print "<hr/>";
++			print "<b>".$this->rssData[$a]["title"]."</b> - ";
++			print $this->rssData[$a]["date"]."<br/>";
++			print $this->rssData[$a]["div"]."<br/><br/>";
+ 			$a++;
+ 		}
+ 
+@@ -89,10 +93,12 @@
+ 	function startElement($parser, $name, $attrs) {
+ 
+ 		switch($name) {
+-			case "GENERATOR" : if($attrs["URL"]!="http://www.blogger.com/") die("To nie jest blogger.. Koncze..<br/>"); break;
++			case "ITEM" :
+ 			case "ENTRY" : $this->rssData[] = array(); $this->curID++; $this->inEntry = true; break;
+ 			case "TITLE" : $this->isEntryTitle = true; break;
++			case "DESCRIPTION" :
+ 			case "DIV" : $this->isDiv = true; break;
++			case "PUBDATE" :
+ 			case "CREATED" : $this->isDate = true; break;
+ 		}
+  
+@@ -101,11 +107,13 @@
+ 
+ 	function endElement($parser, $name) {
+ 		switch($name) {
++			case "ITEM" :
+ 			case "ENTRY" : $this->inEntry = false; break;
+ 			case "TITLE" : $this->isEntryTitle = false; break;
++			case "DESCRIPTION" :
+ 			case "DIV" : $this->isDiv = false; break;
++			case "PUBDATE" :
+ 			case "CREATED" : $this->isDate = false; break;
+-			case "LINK" : $this->isLink = false; break;
+ 		}
+ 	}
+ 
+@@ -114,7 +122,7 @@
+ 			$curID = $this->curID;
+ 			if($this->isDate) $this->rssData[$curID]["date"] = $data;
+ 			if($this->isEntryTitle) $this->rssData[$curID]["title"] = $data;
+-			if($this->isDiv) $this->rssData[$curID]["dev"] = $data;
++			if($this->isDiv) $this->rssData[$curID]["div"] .= "<br/>".$data;
+ 		}
+ 	}
+ 
+
+
+
+From matador at berlios.de  Fri Mar 24 17:55:11 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Fri, 24 Mar 2006 17:55:11 +0100
+Subject: [Oplug-planet] r14 - /
+Message-ID: <200603241655.k2OGtBj7001795@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-24 17:55:11 +0100 (Fri, 24 Mar 2006)
+New Revision: 14
+
+Modified:
+   channels.rss
+Log:
+Dwa wpisy w celach demonstracyjnych: jeden z onetu i jeden z bloggera
+
+
+Modified: channels.rss
+===================================================================
+--- channels.rss	2006-03-24 16:49:08 UTC (rev 13)
++++ channels.rss	2006-03-24 16:55:11 UTC (rev 14)
+@@ -1,2 +1,2 @@
+ http://oplug.blogspot.com/atom.xml
+-http://jade-of-kamakura.blogspot.com/atom.xml
+\ No newline at end of file
++http://anna35.blog.onet.pl/rss/
+
+
+
+From citizen at berlios.de  Fri Mar 24 18:00:26 2006
+From: citizen at berlios.de (citizen at berlios.de)
+Date: Fri, 24 Mar 2006 18:00:26 +0100
+Subject: [Oplug-planet] r15 - /
+Message-ID: <200603241700.k2OH0QBP002267@sheep.berlios.de>
+
+Author: citizen
+Date: 2006-03-24 18:00:22 +0100 (Fri, 24 Mar 2006)
+New Revision: 15
+
+Modified:
+   channels.rss
+Log:
+- dodalem mojego jogger i dziala :]
+
+
+Modified: channels.rss
+===================================================================
+--- channels.rss	2006-03-24 16:55:11 UTC (rev 14)
++++ channels.rss	2006-03-24 17:00:22 UTC (rev 15)
+@@ -1,2 +1,3 @@
+ http://oplug.blogspot.com/atom.xml
+ http://anna35.blog.onet.pl/rss/
++http://citizen.jogger.pl/rss/content/html/10
+
+
+
+From t.karbownicki at gmail.com  Fri Mar 24 18:15:08 2006
+From: t.karbownicki at gmail.com (Tomasz Karbownicki)
+Date: Fri, 24 Mar 2006 18:15:08 +0100
+Subject: [Oplug-planet] r13 - /
+In-Reply-To: <200603241649.k2OGn8jO001172@sheep.berlios.de>
+References: <200603241649.k2OGn8jO001172@sheep.berlios.de>
+Message-ID: <4424291C.5080201@gmail.com>
+
+matador at BerliOS napisa?(a):
+
+>Nierozwiazany pozostaje problem konfliktu roznie kodowanych znakow.. 
+>Propnuje wykorzystac do konwersji program iconv (w php), lecz jak do tej 
+>pory nie udalo mi sie uzyskac zadowalajacych efektow..
+>  
+>
+My?l?, ?e kodowaniem nie trzeba si? przejmowa?. Nie wiem czy s? takie 
+przypadki aby u?ytkownicy Linuksa korzystali jednocze?nie z blogu onetu 
+:) Wi?kszo?? system?w blogowych stoi ju? na utf'ie.
+
+Ale swoj? drog?, jak ogl?dam u mnie na localhost, to kodowanie jest ok:
+
+http://img59.imageshack.us/my.php?image=zrzutekranumozillafirefox2xz.png
+
+
+From staszkoof at gmail.com  Fri Mar 24 18:33:03 2006
+From: staszkoof at gmail.com (Martin)
+Date: Fri, 24 Mar 2006 18:33:03 +0100
+Subject: [Oplug-planet] r13 - /
+In-Reply-To: <4424291C.5080201@gmail.com>
+References: <200603241649.k2OGn8jO001172@sheep.berlios.de>
+	<4424291C.5080201@gmail.com>
+Message-ID: <20060324183303.ecd0226b.staszkoof@gmail.com>
+
+On Fri, 24 Mar 2006 18:15:08 +0100
+Tomasz Karbownicki <t.karbownicki at gmail.com> wrote:
+
+> matador at BerliOS napisa?(a):
+> 
+> >Nierozwiazany pozostaje problem konfliktu roznie kodowanych znakow.. 
+> >Propnuje wykorzystac do konwersji program iconv (w php), lecz jak do tej 
+> >pory nie udalo mi sie uzyskac zadowalajacych efektow..
+> >  
+> >
+> My?l?, ?e kodowaniem nie trzeba si? przejmowa?. Nie wiem czy s? takie 
+> przypadki aby u?ytkownicy Linuksa korzystali jednocze?nie z blogu onetu 
+> :) Wi?kszo?? system?w blogowych stoi ju? na utf'ie.
+> 
+> Ale swoj? drog?, jak ogl?dam u mnie na localhost, to kodowanie jest ok:
+> 
+> http://img59.imageshack.us/my.php?image=zrzutekranumozillafirefox2xz.png
+> _______________________________________________
+Rzeczywi?cie dziwna sprawa.. Kodowanie masz w porz?dku, ale za to wiersza ?ami? si? tam gdzie nie trzeba.. U mnie jest na odwr?t..
+
+
+From t.karbownicki at gmail.com  Fri Mar 24 18:36:09 2006
+From: t.karbownicki at gmail.com (Tomasz Karbownicki)
+Date: Fri, 24 Mar 2006 18:36:09 +0100
+Subject: [Oplug-planet] svn -> www
+Message-ID: <44242E09.8050303@gmail.com>
+
+Planeta wisi ju? na http://linux.opole.pl/planeta/ i o ile nic nie 
+spieprzy?em to 'svn up' powinno wykonywa? si? co 5 minut.
+
+
+From citizen at berlios.de  Fri Mar 24 19:01:24 2006
+From: citizen at berlios.de (citizen at berlios.de)
+Date: Fri, 24 Mar 2006 19:01:24 +0100
+Subject: [Oplug-planet] r16 - /
+Message-ID: <200603241801.k2OI1OhE027529@sheep.berlios.de>
+
+Author: citizen
+Date: 2006-03-24 19:00:25 +0100 (Fri, 24 Mar 2006)
+New Revision: 16
+
+Modified:
+   rss_class.php
+Log:
+- usuniecie liter 'T' i 'Z' z daty blogspot'a
+
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-24 17:00:22 UTC (rev 15)
++++ rss_class.php	2006-03-24 18:00:25 UTC (rev 16)
+@@ -120,7 +120,11 @@
+ 	function XMLcharacterData($parser, $data){
+ 		if($this->inEntry) {
+ 			$curID = $this->curID;
+-			if($this->isDate) $this->rssData[$curID]["date"] = $data;
++			if($this->isDate) {
++				$data = str_replace("T"," ",$data);
++				$data = str_replace("Z"," ",$data);
++				$this->rssData[$curID]["date"] = $data;
++			}
+ 			if($this->isEntryTitle) $this->rssData[$curID]["title"] = $data;
+ 			if($this->isDiv) $this->rssData[$curID]["div"] .= "<br/>".$data;
+ 		}
+
+
+
+From matador at berlios.de  Fri Mar 24 19:03:06 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Fri, 24 Mar 2006 19:03:06 +0100
+Subject: [Oplug-planet] r17 - /
+Message-ID: <200603241803.k2OI36Wk027908@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-24 19:02:11 +0100 (Fri, 24 Mar 2006)
+New Revision: 17
+
+Modified:
+   channels.rss
+Log:
+usunalem niepotrzebny wpis do blog.onet.pl
+
+
+Modified: channels.rss
+===================================================================
+--- channels.rss	2006-03-24 18:00:25 UTC (rev 16)
++++ channels.rss	2006-03-24 18:02:11 UTC (rev 17)
+@@ -1,3 +1,2 @@
+ http://oplug.blogspot.com/atom.xml
+-http://anna35.blog.onet.pl/rss/
+ http://citizen.jogger.pl/rss/content/html/10
+
+
+
+From matador at berlios.de  Fri Mar 24 19:16:51 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Fri, 24 Mar 2006 19:16:51 +0100
+Subject: [Oplug-planet] r18 - /
+Message-ID: <200603241816.k2OIGp05002036@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-24 19:16:50 +0100 (Fri, 24 Mar 2006)
+New Revision: 18
+
+Modified:
+   rss_class.php
+Log:
+Usuniecie 4 znakow znakomicie poprawilo efekt koncowy :]
+
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-24 18:02:11 UTC (rev 17)
++++ rss_class.php	2006-03-24 18:16:50 UTC (rev 18)
+@@ -126,7 +126,7 @@
+ 				$this->rssData[$curID]["date"] = $data;
+ 			}
+ 			if($this->isEntryTitle) $this->rssData[$curID]["title"] = $data;
+-			if($this->isDiv) $this->rssData[$curID]["div"] .= "<br/>".$data;
++			if($this->isDiv) $this->rssData[$curID]["div"] .= $data;
+ 		}
+ 	}
+ 
+
+
+
+From t.karbownicki at gmail.com  Fri Mar 24 19:38:54 2006
+From: t.karbownicki at gmail.com (Tomasz Karbownicki)
+Date: Fri, 24 Mar 2006 19:38:54 +0100
+Subject: [Oplug-planet] r18 - /
+In-Reply-To: <200603241816.k2OIGp05002036@sheep.berlios.de>
+References: <200603241816.k2OIGp05002036@sheep.berlios.de>
+Message-ID: <44243CBE.4080305@gmail.com>
+
+matador at BerliOS napisa?(a):
+
+>Usuniecie 4 znakow znakomicie poprawilo efekt koncowy :]
+>  
+>
+Uprzedzi?e? mnie o jakie? 5 sekund :]
+
+
+From citizen at berlios.de  Fri Mar 24 20:33:22 2006
+From: citizen at berlios.de (citizen at berlios.de)
+Date: Fri, 24 Mar 2006 20:33:22 +0100
+Subject: [Oplug-planet] r19 - /
+Message-ID: <200603241933.k2OJXMP9010429@sheep.berlios.de>
+
+Author: citizen
+Date: 2006-03-24 20:33:13 +0100 (Fri, 24 Mar 2006)
+New Revision: 19
+
+Added:
+   style.css
+Modified:
+   go_planet.php
+   rss_class.php
+Log:
+- Od teraz CRON uruchamia co 5 minut go_planet.php i otrzymana zawartosc zapisuje do index.html
+
+
+Modified: go_planet.php
+===================================================================
+--- go_planet.php	2006-03-24 18:16:50 UTC (rev 18)
++++ go_planet.php	2006-03-24 19:33:13 UTC (rev 19)
+@@ -1,11 +1,29 @@
+-<?
++<?php
+ // Skrypt do pobieranie kanalow rss
+ // przeznaczony do cyklicznego uruchamiania
++?>
+ 
+-echo "Gooo? Planet!";
++<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
++<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pl" lang="pl">
++<head>
++<meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8"/>
++<meta http-equiv="Content-Language" content="pl" />
++<style type="text/css" media="all">
++ at import "style.css";
++</style>
++<title>OpLUG planet</title>
+ 
++</head> 
++ 
++<body>
++
++<?php
++
+ require_once("rss_class.php");
+ 
+ $rss = new RSS();
+ 
+ ?>
++
++</body>
++</html>
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-24 18:16:50 UTC (rev 18)
++++ rss_class.php	2006-03-24 19:33:13 UTC (rev 19)
+@@ -33,9 +33,6 @@
+ 	
+ 
+ 	function RSS() {
+-		print "<html><head>";
+-		print "<meta http-equiv=\"content-type\" content=\"application/xhtml+xml; charset=UTF-8\"/>";
+-		print "</head><body>";
+ 		print "<br/>RSS feed reader v" . $this->version . " by OpLUG<br/>";
+ 		print "RSS feed and Blogger Atom support<br/><br/>";
+ 	
+
+Added: style.css
+===================================================================
+
+
+
+From matador at berlios.de  Fri Mar 24 20:52:16 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Fri, 24 Mar 2006 20:52:16 +0100
+Subject: [Oplug-planet] r20 - /
+Message-ID: <200603241952.k2OJqGPV017226@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-24 20:52:12 +0100 (Fri, 24 Mar 2006)
+New Revision: 20
+
+Modified:
+   rss_class.php
+   style.css
+Log:
+Do postow dodalem linki do oryginalnych blogow..
+Dodalem minimalny styl dla linkow..
+
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-24 19:33:13 UTC (rev 19)
++++ rss_class.php	2006-03-24 19:52:12 UTC (rev 20)
+@@ -27,8 +27,9 @@
+ 	var $isEntryTitle = false;
+ 	var $isDiv = false;
+ 	var $isID = false;
++	var $isLink = false;
+ 
+-	var $isOnet = false;
++	var $isRSS = false;
+ 
+ 	
+ 
+@@ -47,7 +48,6 @@
+ 
+ 		$this->print_to_file($filename);
+ 		
+-		print "</body></html>";		
+ 	}
+ 
+ 	function print_to_file($filename) {
+@@ -57,6 +57,8 @@
+ 			print "<b>".$this->rssData[$a]["title"]."</b> - ";
+ 			print $this->rssData[$a]["date"]."<br/>";
+ 			print $this->rssData[$a]["div"]."<br/><br/>";
++			print "<a href=\"".$this->rssData[$a]["link"]."\" target=\"_new\">";
++			print $this->rssData[$a]["link"]."</a><br/>";
+ 			$a++;
+ 		}
+ 
+@@ -90,6 +92,7 @@
+ 	function startElement($parser, $name, $attrs) {
+ 
+ 		switch($name) {
++			case "RSS" : $this->isRSS = true; break;
+ 			case "ITEM" :
+ 			case "ENTRY" : $this->rssData[] = array(); $this->curID++; $this->inEntry = true; break;
+ 			case "TITLE" : $this->isEntryTitle = true; break;
+@@ -97,6 +100,7 @@
+ 			case "DIV" : $this->isDiv = true; break;
+ 			case "PUBDATE" :
+ 			case "CREATED" : $this->isDate = true; break;
++			case "LINK" : $this->isLink = true; break;
+ 		}
+  
+ 
+@@ -104,6 +108,7 @@
+ 
+ 	function endElement($parser, $name) {
+ 		switch($name) {
++			case "RSS" : $this->isRSS = false; break;
+ 			case "ITEM" :
+ 			case "ENTRY" : $this->inEntry = false; break;
+ 			case "TITLE" : $this->isEntryTitle = false; break;
+@@ -111,6 +116,7 @@
+ 			case "DIV" : $this->isDiv = false; break;
+ 			case "PUBDATE" :
+ 			case "CREATED" : $this->isDate = false; break;
++			case "LINK" : $this->isLink = false; break;
+ 		}
+ 	}
+ 
+@@ -124,6 +130,9 @@
+ 			}
+ 			if($this->isEntryTitle) $this->rssData[$curID]["title"] = $data;
+ 			if($this->isDiv) $this->rssData[$curID]["div"] .= $data;
++			if($this->isRSS) {
++				if($this->isLink) $this->rssData[$curID]["link"] = $data;
++			}
+ 		}
+ 	}
+ 
+
+Modified: style.css
+===================================================================
+--- style.css	2006-03-24 19:33:13 UTC (rev 19)
++++ style.css	2006-03-24 19:52:12 UTC (rev 20)
+@@ -0,0 +1,13 @@
++body {
++	
++}
++
++A:link {
++	color: #bbb;
++	text-decoration: none;
++}
++
++A:visited {
++	color: #bbb;
++	text-decoration: none;
++}
+\ No newline at end of file
+
+
+
+From citizen at berlios.de  Fri Mar 24 21:20:40 2006
+From: citizen at berlios.de (citizen at berlios.de)
+Date: Fri, 24 Mar 2006 21:20:40 +0100
+Subject: [Oplug-planet] r21 - /
+Message-ID: <200603242020.k2OKKenY001052@sheep.berlios.de>
+
+Author: citizen
+Date: 2006-03-24 21:20:35 +0100 (Fri, 24 Mar 2006)
+New Revision: 21
+
+Modified:
+   channels.rss
+   rss_class.php
+Log:
+- ograniczylem moj rss do 2 wpisow
+
+
+Modified: channels.rss
+===================================================================
+--- channels.rss	2006-03-24 19:52:12 UTC (rev 20)
++++ channels.rss	2006-03-24 20:20:35 UTC (rev 21)
+@@ -1,2 +1,2 @@
+ http://oplug.blogspot.com/atom.xml
+-http://citizen.jogger.pl/rss/content/html/10
++http://citizen.jogger.pl/rss/content/html/2
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-24 19:52:12 UTC (rev 20)
++++ rss_class.php	2006-03-24 20:20:35 UTC (rev 21)
+@@ -27,9 +27,8 @@
+ 	var $isEntryTitle = false;
+ 	var $isDiv = false;
+ 	var $isID = false;
+-	var $isLink = false;
+ 
+-	var $isRSS = false;
++	var $isOnet = false;
+ 
+ 	
+ 
+@@ -48,6 +47,7 @@
+ 
+ 		$this->print_to_file($filename);
+ 		
++		print "</body></html>";		
+ 	}
+ 
+ 	function print_to_file($filename) {
+@@ -57,8 +57,6 @@
+ 			print "<b>".$this->rssData[$a]["title"]."</b> - ";
+ 			print $this->rssData[$a]["date"]."<br/>";
+ 			print $this->rssData[$a]["div"]."<br/><br/>";
+-			print "<a href=\"".$this->rssData[$a]["link"]."\" target=\"_new\">";
+-			print $this->rssData[$a]["link"]."</a><br/>";
+ 			$a++;
+ 		}
+ 
+@@ -80,11 +78,11 @@
+ 		}
+ 
+ 		while ($data = fread($fp, 4096)) {
+-   		if (!xml_parse($this->RSSparser, $data, feof($fp))) {
+-       	die(sprintf("Blad XML: %s at line %d",
++   			if (!xml_parse($this->RSSparser, $data, feof($fp))) {
++       			die(sprintf("Blad XML: %s at line %d",
+                    xml_error_string(xml_get_error_code($this->RSSparser)),
+                    xml_get_current_line_number($this->RSSparser)));
+-   		}
++   			}
+ 		}
+ 		xml_parser_free($this->RSSparser);
+ 	}
+@@ -92,7 +90,6 @@
+ 	function startElement($parser, $name, $attrs) {
+ 
+ 		switch($name) {
+-			case "RSS" : $this->isRSS = true; break;
+ 			case "ITEM" :
+ 			case "ENTRY" : $this->rssData[] = array(); $this->curID++; $this->inEntry = true; break;
+ 			case "TITLE" : $this->isEntryTitle = true; break;
+@@ -100,7 +97,6 @@
+ 			case "DIV" : $this->isDiv = true; break;
+ 			case "PUBDATE" :
+ 			case "CREATED" : $this->isDate = true; break;
+-			case "LINK" : $this->isLink = true; break;
+ 		}
+  
+ 
+@@ -108,7 +104,6 @@
+ 
+ 	function endElement($parser, $name) {
+ 		switch($name) {
+-			case "RSS" : $this->isRSS = false; break;
+ 			case "ITEM" :
+ 			case "ENTRY" : $this->inEntry = false; break;
+ 			case "TITLE" : $this->isEntryTitle = false; break;
+@@ -116,7 +111,6 @@
+ 			case "DIV" : $this->isDiv = false; break;
+ 			case "PUBDATE" :
+ 			case "CREATED" : $this->isDate = false; break;
+-			case "LINK" : $this->isLink = false; break;
+ 		}
+ 	}
+ 
+@@ -130,9 +124,6 @@
+ 			}
+ 			if($this->isEntryTitle) $this->rssData[$curID]["title"] = $data;
+ 			if($this->isDiv) $this->rssData[$curID]["div"] .= $data;
+-			if($this->isRSS) {
+-				if($this->isLink) $this->rssData[$curID]["link"] = $data;
+-			}
+ 		}
+ 	}
+ 
+
+
+
+From citizen at berlios.de  Fri Mar 24 21:51:30 2006
+From: citizen at berlios.de (citizen at berlios.de)
+Date: Fri, 24 Mar 2006 21:51:30 +0100
+Subject: [Oplug-planet] r22 - /
+Message-ID: <200603242051.k2OKpUPK002222@sheep.berlios.de>
+
+Author: citizen
+Date: 2006-03-24 21:51:25 +0100 (Fri, 24 Mar 2006)
+New Revision: 22
+
+Modified:
+   go_planet.php
+   rss_class.php
+Log:
+- przerzucilem wypluwanie danych z klasy do go_planet
+
+
+Modified: go_planet.php
+===================================================================
+--- go_planet.php	2006-03-24 20:20:35 UTC (rev 21)
++++ go_planet.php	2006-03-24 20:51:25 UTC (rev 22)
+@@ -23,6 +23,20 @@
+ 
+ $rss = new RSS();
+ 
++$a=0;
++
++while($a<=$rss->curID) {
++	print "<div class=\"notka\">";
++	print "<h2>".$rss->rssData[$a]["title"]."</h2>";
++	print "<div class=\"data\">".$rss->rssData[$a]["date"]."</div>";
++	print "<div class=\"tresc\">".$rss->rssData[$a]["div"]."</div>";
++	print "</div>";
++	$a++;
++}
++
++print "<br/>RSS feed reader v" . $rss->version . " by OpLUG<br/>";
++print "RSS feed and Blogger Atom support<br/><br/>";
++
+ ?>
+ 
+ </body>
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-24 20:20:35 UTC (rev 21)
++++ rss_class.php	2006-03-24 20:51:25 UTC (rev 22)
+@@ -33,9 +33,6 @@
+ 	
+ 
+ 	function RSS() {
+-		print "<br/>RSS feed reader v" . $this->version . " by OpLUG<br/>";
+-		print "RSS feed and Blogger Atom support<br/><br/>";
+-	
+ 		$this->get_channels($this->chanfile);
+ 
+ 		$a=0;
+@@ -45,23 +42,8 @@
+ 			$this->parse($chan[0]);
+ 		}
+ 
+-		$this->print_to_file($filename);
+-		
+-		print "</body></html>";		
+ 	}
+ 
+-	function print_to_file($filename) {
+-		$a=0;
+-		while($a<=$this->curID) {
+-			print "<hr/>";
+-			print "<b>".$this->rssData[$a]["title"]."</b> - ";
+-			print $this->rssData[$a]["date"]."<br/>";
+-			print $this->rssData[$a]["div"]."<br/><br/>";
+-			$a++;
+-		}
+-
+-	}
+-
+ 	function get_channels($chanfile) {
+ 		
+ 		$this->channels = file($chanfile);
+
+
+
+From citizen at berlios.de  Fri Mar 24 22:02:50 2006
+From: citizen at berlios.de (citizen at berlios.de)
+Date: Fri, 24 Mar 2006 22:02:50 +0100
+Subject: [Oplug-planet] r23 - /
+Message-ID: <200603242102.k2OL2oFY003407@sheep.berlios.de>
+
+Author: citizen
+Date: 2006-03-24 22:02:48 +0100 (Fri, 24 Mar 2006)
+New Revision: 23
+
+Modified:
+   go_planet.php
+   style.css
+Log:
+- Pakowanie w pojemniki i stylowanie
+
+
+Modified: go_planet.php
+===================================================================
+--- go_planet.php	2006-03-24 20:51:25 UTC (rev 22)
++++ go_planet.php	2006-03-24 21:02:48 UTC (rev 23)
+@@ -17,6 +17,10 @@
+  
+ <body>
+ 
++<div class="baner"></div>
++
++<div class="main">
++
+ <?php
+ 
+ require_once("rss_class.php");
+@@ -27,7 +31,7 @@
+ 
+ while($a<=$rss->curID) {
+ 	print "<div class=\"notka\">";
+-	print "<h2>".$rss->rssData[$a]["title"]."</h2>";
++	print "<h2 class=\"tytul\">".$rss->rssData[$a]["title"]."</h2>";
+ 	print "<div class=\"data\">".$rss->rssData[$a]["date"]."</div>";
+ 	print "<div class=\"tresc\">".$rss->rssData[$a]["div"]."</div>";
+ 	print "</div>";
+@@ -39,5 +43,7 @@
+ 
+ ?>
+ 
++</div>
++
+ </body>
+ </html>
+
+Modified: style.css
+===================================================================
+--- style.css	2006-03-24 20:51:25 UTC (rev 22)
++++ style.css	2006-03-24 21:02:48 UTC (rev 23)
+@@ -1,7 +1,31 @@
+ body {
+-	
++	margin: 0;
++	padding: 0;
+ }
+ 
++.main {
++	width: 800px;
++	margin: 0px auto;
++}
++
++.notka {
++	margin: 30px 0 30px 0;
++}
++
++	.notka .tytul {
++		margin: 10px 0 4px 0;
++		padding: 0;
++	}
++	
++	.notka .data {
++		margin-bottom: 20px;
++	}
++	
++	.notka .tresc {
++		padding-bottom: 30px;
++		border-bottom: 1px solid #CCC;
++	}
++
+ A:link {
+ 	color: #bbb;
+ 	text-decoration: none;
+@@ -10,4 +34,4 @@
+ A:visited {
+ 	color: #bbb;
+ 	text-decoration: none;
+-}
+\ No newline at end of file
++}
+
+
+
+From matador at berlios.de  Fri Mar 24 22:35:04 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Fri, 24 Mar 2006 22:35:04 +0100
+Subject: [Oplug-planet] r24 - /
+Message-ID: <200603242135.k2OLZ4qi006235@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-24 22:35:04 +0100 (Fri, 24 Mar 2006)
+New Revision: 24
+
+Modified:
+   rss_class.php
+   style.css
+Log:
+Zapakowalem footer do klasy..
+W najblizsyzm czasie zabieram sie do poprawy obslugi bloggerowego Atomu, 
+gdyz jest on bardziej skomplikowany niz RSS feed i wciaz sa z nim 
+problemy..
+
+
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-24 21:02:48 UTC (rev 23)
++++ rss_class.php	2006-03-24 21:35:04 UTC (rev 24)
+@@ -44,6 +44,16 @@
+ 
+ 	}
+ 
++	function print_credits() {
++		print "RSS feed reader v" . $this->version . " by OpLUG<br/>";
++		print "RSS feed and Blogger Atom support<br/>";
++
++	}
++
++	function print_post($id) {
++		
++	}
++
+ 	function get_channels($chanfile) {
+ 		
+ 		$this->channels = file($chanfile);
+
+Modified: style.css
+===================================================================
+--- style.css	2006-03-24 21:02:48 UTC (rev 23)
++++ style.css	2006-03-24 21:35:04 UTC (rev 24)
+@@ -26,12 +26,20 @@
+ 		border-bottom: 1px solid #CCC;
+ 	}
+ 
++#credits {
++	width: 100%;
++	text-align: center;
++	border-top: 1px solid #000;
++	border-bottom: 1px solid #000;
++	background-color: #ddd;
++}
++
+ A:link {
+-	color: #bbb;
++	color: #777;
+ 	text-decoration: none;
+ }
+ 
+ A:visited {
+-	color: #bbb;
++	color: #777;
+ 	text-decoration: none;
+ }
+
+
+
+From citizen at berlios.de  Fri Mar 24 22:48:17 2006
+From: citizen at berlios.de (citizen at berlios.de)
+Date: Fri, 24 Mar 2006 22:48:17 +0100
+Subject: [Oplug-planet] r25 - /
+Message-ID: <200603242148.k2OLmHKj007199@sheep.berlios.de>
+
+Author: citizen
+Date: 2006-03-24 22:48:15 +0100 (Fri, 24 Mar 2006)
+New Revision: 25
+
+Modified:
+   go_planet.php
+   style.css
+Log:
+- nowy styl
+
+
+Modified: go_planet.php
+===================================================================
+--- go_planet.php	2006-03-24 21:35:04 UTC (rev 24)
++++ go_planet.php	2006-03-24 21:48:15 UTC (rev 25)
+@@ -17,7 +17,7 @@
+  
+ <body>
+ 
+-<div class="baner"></div>
++<div class="baner"><a href="http://linux.opole.pl">OpLUG Planet</a></div>
+ 
+ <div class="main">
+ 
+
+Modified: style.css
+===================================================================
+--- style.css	2006-03-24 21:35:04 UTC (rev 24)
++++ style.css	2006-03-24 21:48:15 UTC (rev 25)
+@@ -1,13 +1,51 @@
++A:link {
++	color: #bbb;
++	text-decoration: none;
++}
++
++A:visited {
++	color: #bbb;
++	text-decoration: none;
++}
++
+ body {
+ 	margin: 0;
+ 	padding: 0;
++	background-color: #92C400;
++	position: relative;
++	top: -100px;
+ }
+ 
+-.main {
++.baner {
+ 	width: 800px;
++	height: 220px;
+ 	margin: 0px auto;
++	background: url('http://www.encyclopedie-enligne.com/Images/2/200px-tux.png') top right no-repeat;
++	position: relative;
++	top: 100px;
++	z-index: 2;
+ }
+ 
++	.baner a {
++	display: block;
++	padding-top: 57px;
++	font-size: 70px;
++	color: #000;
++	}
++
++.main {
++	width: 800px;
++	margin: 0px auto -100px auto;
++	font-family: Tahoma, Verdana, sans-serif, Helvetica;
++  	font-size: 13px;
++  	background-color: #FFF;
++  	padding: 15px;
++  	border-top: 1px solid #485F00;
++  	border-left: 1px solid #485F00;
++  	border-right: 1px solid #485F00; 
++	z-index: 1;	  	
++}
++
+ .notka {
+ 	margin: 30px 0 30px 0;
+ }
+@@ -24,22 +62,5 @@
+ 	.notka .tresc {
+ 		padding-bottom: 30px;
+ 		border-bottom: 1px solid #CCC;
++		text-align: justify;
+ 	}
+-
+-#credits {
+-	width: 100%;
+-	text-align: center;
+-	border-top: 1px solid #000;
+-	border-bottom: 1px solid #000;
+-	background-color: #ddd;
+-}
+-
+-A:link {
+-	color: #777;
+-	text-decoration: none;
+-}
+-
+-A:visited {
+-	color: #777;
+-	text-decoration: none;
+-}
+
+
+
+From citizen at berlios.de  Fri Mar 24 22:58:43 2006
+From: citizen at berlios.de (citizen at berlios.de)
+Date: Fri, 24 Mar 2006 22:58:43 +0100
+Subject: [Oplug-planet] r26 - /
+Message-ID: <200603242158.k2OLwhcL008870@sheep.berlios.de>
+
+Author: citizen
+Date: 2006-03-24 22:58:41 +0100 (Fri, 24 Mar 2006)
+New Revision: 26
+
+Modified:
+   go_planet.php
+   style.css
+Log:
+- upluwanie credits w go_planet
+- style do credits
+
+
+Modified: go_planet.php
+===================================================================
+--- go_planet.php	2006-03-24 21:48:15 UTC (rev 25)
++++ go_planet.php	2006-03-24 21:58:41 UTC (rev 26)
+@@ -38,8 +38,9 @@
+ 	$a++;
+ }
+ 
+-print "<br/>RSS feed reader v" . $rss->version . " by OpLUG<br/>";
+-print "RSS feed and Blogger Atom support<br/><br/>";
++print "<div class=\"credits\">";
++$rss->print_credits();
++print "</div>";
+ 
+ ?>
+ 
+
+Modified: style.css
+===================================================================
+--- style.css	2006-03-24 21:48:15 UTC (rev 25)
++++ style.css	2006-03-24 21:58:41 UTC (rev 26)
+@@ -46,21 +46,26 @@
+ 	z-index: 1;	  	
+ }
+ 
+-.notka {
+-	margin: 30px 0 30px 0;
+-}
++	.notka {
++		margin: 30px 0 30px 0;
++	}
+ 
+-	.notka .tytul {
+-		margin: 10px 0 4px 0;
+-		padding: 0;
++		.notka .tytul {
++			margin: 10px 0 4px 0;
++			padding: 0;
++		}
++		
++		.notka .data {
++			margin-bottom: 20px;
++		}
++		
++		.notka .tresc {
++			padding-bottom: 30px;
++			border-bottom: 1px solid #CCC;
++			text-align: justify;
++		}
++		
++	.credits {
++		color: #999;
++		text-align: right;
+ 	}
+-	
+-	.notka .data {
+-		margin-bottom: 20px;
+-	}
+-	
+-	.notka .tresc {
+-		padding-bottom: 30px;
+-		border-bottom: 1px solid #CCC;
+-		text-align: justify;
+-	}
+
+
+
+From staszkoof at gmail.com  Fri Mar 24 23:28:21 2006
+From: staszkoof at gmail.com (Martin)
+Date: Fri, 24 Mar 2006 23:28:21 +0100
+Subject: [Oplug-planet] r26 - /
+In-Reply-To: <200603242158.k2OLwhcL008870@sheep.berlios.de>
+References: <200603242158.k2OLwhcL008870@sheep.berlios.de>
+Message-ID: <20060324232821.22a3a19d.staszkoof@gmail.com>
+
+On Fri, 24 Mar 2006 22:58:43 +0100
+citizen at berlios.de wrote:
+
+> Author: citizen
+> Date: 2006-03-24 22:58:41 +0100 (Fri, 24 Mar 2006)
+> New Revision: 26
+> 
+> Modified:
+>    go_planet.php
+>    style.css
+> Log:
+> - upluwanie credits w go_planet
+> - style do credits
+> 
+> 
+> Modified: go_planet.php
+> ===================================================================
+> --- go_planet.php	2006-03-24 21:48:15 UTC (rev 25)
+> +++ go_planet.php	2006-03-24 21:58:41 UTC (rev 26)
+> @@ -38,8 +38,9 @@
+>  	$a++;
+>  }
+>  
+> -print "<br/>RSS feed reader v" . $rss->version . " by OpLUG<br/>";
+> -print "RSS feed and Blogger Atom support<br/><br/>";
+> +print "<div class=\"credits\">";
+> +$rss->print_credits();
+> +print "</div>";
+>  
+>  ?>
+>  
+> 
+> Modified: style.css
+> ===================================================================
+> --- style.css	2006-03-24 21:48:15 UTC (rev 25)
+> +++ style.css	2006-03-24 21:58:41 UTC (rev 26)
+> @@ -46,21 +46,26 @@
+>  	z-index: 1;	  	
+>  }
+>  
+> -.notka {
+> -	margin: 30px 0 30px 0;
+> -}
+> +	.notka {
+> +		margin: 30px 0 30px 0;
+> +	}
+>  
+> -	.notka .tytul {
+> -		margin: 10px 0 4px 0;
+> -		padding: 0;
+> +		.notka .tytul {
+> +			margin: 10px 0 4px 0;
+> +			padding: 0;
+> +		}
+> +		
+> +		.notka .data {
+> +			margin-bottom: 20px;
+> +		}
+> +		
+> +		.notka .tresc {
+> +			padding-bottom: 30px;
+> +			border-bottom: 1px solid #CCC;
+> +			text-align: justify;
+> +		}
+> +		
+> +	.credits {
+> +		color: #999;
+> +		text-align: right;
+>  	}
+> -	
+> -	.notka .data {
+> -		margin-bottom: 20px;
+> -	}
+> -	
+> -	.notka .tresc {
+> -		padding-bottom: 30px;
+> -		border-bottom: 1px solid #CCC;
+> -		text-align: justify;
+> -	}
+> 
+> _______________________________________________
+> Oplug-planet mailing list
+> Oplug-planet at lists.berlios.de
+> http://lists.berlios.de/mailman/listinfo/oplug-planet
+
+
+Nice work :]
+
+
+From staszkoof at gmail.com  Fri Mar 24 23:28:21 2006
+From: staszkoof at gmail.com (Martin)
+Date: Fri, 24 Mar 2006 23:28:21 +0100
+Subject: [Oplug-planet] r26 - /
+In-Reply-To: <200603242158.k2OLwhcL008870@sheep.berlios.de>
+References: <200603242158.k2OLwhcL008870@sheep.berlios.de>
+Message-ID: <20060324232821.22a3a19d.staszkoof@gmail.com>
+
+On Fri, 24 Mar 2006 22:58:43 +0100
+citizen at berlios.de wrote:
+
+> Author: citizen
+> Date: 2006-03-24 22:58:41 +0100 (Fri, 24 Mar 2006)
+> New Revision: 26
+> 
+> Modified:
+>    go_planet.php
+>    style.css
+> Log:
+> - upluwanie credits w go_planet
+> - style do credits
+> 
+> 
+> Modified: go_planet.php
+> ===================================================================
+> --- go_planet.php	2006-03-24 21:48:15 UTC (rev 25)
+> +++ go_planet.php	2006-03-24 21:58:41 UTC (rev 26)
+> @@ -38,8 +38,9 @@
+>  	$a++;
+>  }
+>  
+> -print "<br/>RSS feed reader v" . $rss->version . " by OpLUG<br/>";
+> -print "RSS feed and Blogger Atom support<br/><br/>";
+> +print "<div class=\"credits\">";
+> +$rss->print_credits();
+> +print "</div>";
+>  
+>  ?>
+>  
+> 
+> Modified: style.css
+> ===================================================================
+> --- style.css	2006-03-24 21:48:15 UTC (rev 25)
+> +++ style.css	2006-03-24 21:58:41 UTC (rev 26)
+> @@ -46,21 +46,26 @@
+>  	z-index: 1;	  	
+>  }
+>  
+> -.notka {
+> -	margin: 30px 0 30px 0;
+> -}
+> +	.notka {
+> +		margin: 30px 0 30px 0;
+> +	}
+>  
+> -	.notka .tytul {
+> -		margin: 10px 0 4px 0;
+> -		padding: 0;
+> +		.notka .tytul {
+> +			margin: 10px 0 4px 0;
+> +			padding: 0;
+> +		}
+> +		
+> +		.notka .data {
+> +			margin-bottom: 20px;
+> +		}
+> +		
+> +		.notka .tresc {
+> +			padding-bottom: 30px;
+> +			border-bottom: 1px solid #CCC;
+> +			text-align: justify;
+> +		}
+> +		
+> +	.credits {
+> +		color: #999;
+> +		text-align: right;
+>  	}
+> -	
+> -	.notka .data {
+> -		margin-bottom: 20px;
+> -	}
+> -	
+> -	.notka .tresc {
+> -		padding-bottom: 30px;
+> -		border-bottom: 1px solid #CCC;
+> -		text-align: justify;
+> -	}
+> 
+> _______________________________________________
+> Oplug-planet mailing list
+> Oplug-planet at lists.berlios.de
+> http://lists.berlios.de/mailman/listinfo/oplug-planet
+
+
+Nice work :]
+
+
+From t.karbownicki at gmail.com  Fri Mar 24 23:31:26 2006
+From: t.karbownicki at gmail.com (Tomasz Karbownicki)
+Date: Fri, 24 Mar 2006 23:31:26 +0100
+Subject: [Oplug-planet] r26 - /
+In-Reply-To: <20060324232821.22a3a19d.staszkoof@gmail.com>
+References: <200603242158.k2OLwhcL008870@sheep.berlios.de> <20060324232821.22a3a19d.staszkoof@gmail.com>
+Message-ID: <4424733E.7010704@gmail.com>
+
+Martin napisa?(a):
+
+>Nice work :]
+>  
+>
+Ale za to obiektowe php to p?ki co dla mnie czarna magia :]
+
+
+From staszkoof at gmail.com  Fri Mar 24 23:38:46 2006
+From: staszkoof at gmail.com (Martin)
+Date: Fri, 24 Mar 2006 23:38:46 +0100
+Subject: [Oplug-planet] r26 - /
+In-Reply-To: <4424733E.7010704@gmail.com>
+References: <200603242158.k2OLwhcL008870@sheep.berlios.de>
+	<20060324232821.22a3a19d.staszkoof@gmail.com>
+	<4424733E.7010704@gmail.com>
+Message-ID: <20060324233846.e54dd9b9.staszkoof@gmail.com>
+
+On Fri, 24 Mar 2006 23:31:26 +0100
+Tomasz Karbownicki <t.karbownicki at gmail.com> wrote:
+
+> Martin napisa?(a):
+> 
+> >Nice work :]
+> >  
+> >
+> Ale za to obiektowe php to p?ki co dla mnie czarna magia :]
+
+Gratuluje talentu estetycznego.. Minimalistycznie, ale za to przekonujaco ..:]
+
+Na dzisiaj koncze..
+
+
+From t.karbownicki at gmail.com  Fri Mar 24 23:50:34 2006
+From: t.karbownicki at gmail.com (Tomasz Karbownicki)
+Date: Fri, 24 Mar 2006 23:50:34 +0100
+Subject: [Oplug-planet] r26 - /
+In-Reply-To: <20060324233846.e54dd9b9.staszkoof@gmail.com>
+References: <200603242158.k2OLwhcL008870@sheep.berlios.de>	<20060324232821.22a3a19d.staszkoof@gmail.com>	<4424733E.7010704@gmail.com> <20060324233846.e54dd9b9.staszkoof@gmail.com>
+Message-ID: <442477BA.4090003@gmail.com>
+
+Martin napisa?(a):
+
+>Gratuluje talentu estetycznego.. Minimalistycznie, ale za to przekonujaco ..:]
+>
+>Na dzisiaj koncze.
+>  
+>
+A ja gratuluj? talentu programistycznego :]
+
+PS. Wiesz mo?e komu trzeba da? i ile, ?eby widzie? swoje posty ? Bo 
+opcja * Receive posts you send to the list *ustawiona na Yes nic nie daje.
+
+
+From staszkoof at gmail.com  Sat Mar 25 00:11:31 2006
+From: staszkoof at gmail.com (Martin)
+Date: Sat, 25 Mar 2006 00:11:31 +0100
+Subject: [Oplug-planet] r26 - /
+In-Reply-To: <442477BA.4090003@gmail.com>
+References: <200603242158.k2OLwhcL008870@sheep.berlios.de>
+	<20060324232821.22a3a19d.staszkoof@gmail.com>
+	<4424733E.7010704@gmail.com>
+	<20060324233846.e54dd9b9.staszkoof@gmail.com>
+	<442477BA.4090003@gmail.com>
+Message-ID: <20060325001131.988ed6de.staszkoof@gmail.com>
+
+On Fri, 24 Mar 2006 23:50:34 +0100
+Tomasz Karbownicki <t.karbownicki at gmail.com> wrote:
+
+> PS. Wiesz mo?e komu trzeba da? i ile, ?eby widzie? swoje posty ? Bo 
+> opcja * Receive posts you send to the list *ustawiona na Yes nic nie daje.
+
+Te? si? nad tym zastanawia?em i nie doszed?em do ?adnego konkretnego wniosku...
+
+
+From matador at berlios.de  Sat Mar 25 12:32:21 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Sat, 25 Mar 2006 12:32:21 +0100
+Subject: [Oplug-planet] r27 - /
+Message-ID: <200603251132.k2PBWLrl031810@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-25 12:32:19 +0100 (Sat, 25 Mar 2006)
+New Revision: 27
+
+Modified:
+   go_planet.php
+   rss_class.php
+Log:
+Ujednolicenia daty dla obydwu na razie wspieranych systemow blogowych
+
+
+Modified: go_planet.php
+===================================================================
+--- go_planet.php	2006-03-24 21:58:41 UTC (rev 26)
++++ go_planet.php	2006-03-25 11:32:19 UTC (rev 27)
+@@ -25,14 +25,14 @@
+ 
+ require_once("rss_class.php");
+ 
+-$rss = new RSS();
++$rss = new RSS("channels.rss");
+ 
+ $a=0;
+ 
+ while($a<=$rss->curID) {
+ 	print "<div class=\"notka\">";
+ 	print "<h2 class=\"tytul\">".$rss->rssData[$a]["title"]."</h2>";
+-	print "<div class=\"data\">".$rss->rssData[$a]["date"]."</div>";
++	print "<div class=\"data\">".$rss->get_data_string($a)."</div>";
+ 	print "<div class=\"tresc\">".$rss->rssData[$a]["div"]."</div>";
+ 	print "</div>";
+ 	$a++;
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-24 21:58:41 UTC (rev 26)
++++ rss_class.php	2006-03-25 11:32:19 UTC (rev 27)
+@@ -11,7 +11,6 @@
+ 	var $url_base = "http://linux.opole.pl/";
+ 	var $filename = "index.html"; // Plik do wygenerowania
+ 	var $filename_short = "planetka.php"; // plik ze skrotami..
+-	var $chanfile = "channels.rss"; // plik z kanalami w postaci URL
+ 	var $channels = array(); // tablica kanalow do przegladniecia
+ 	var $version = "1.0";
+ 
+@@ -28,12 +27,13 @@
+ 	var $isDiv = false;
+ 	var $isID = false;
+ 
+-	var $isOnet = false;
++	var $isRSS = false;
++	var $isAtom = false;
+ 
+ 	
+ 
+-	function RSS() {
+-		$this->get_channels($this->chanfile);
++	function RSS($chanfile) {
++		$this->get_channels($chanfile);
+ 
+ 		$a=0;
+ 
+@@ -50,8 +50,8 @@
+ 
+ 	}
+ 
+-	function print_post($id) {
+-		
++	function get_data_string($id) {
++		return $this->rssData[$id]["date"]["day"]."/".$this->rssData[$id]["date"]["month"]."/".$this->rssData[$id]["date"]["year"];
+ 	}
+ 
+ 	function get_channels($chanfile) {
+@@ -82,6 +82,8 @@
+ 	function startElement($parser, $name, $attrs) {
+ 
+ 		switch($name) {
++			case "RSS" : $this->isRSS = true; break;
++			case "FEED" : $this->isAtom = true; break;
+ 			case "ITEM" :
+ 			case "ENTRY" : $this->rssData[] = array(); $this->curID++; $this->inEntry = true; break;
+ 			case "TITLE" : $this->isEntryTitle = true; break;
+@@ -96,6 +98,8 @@
+ 
+ 	function endElement($parser, $name) {
+ 		switch($name) {
++			case "RSS" : $this->isRSS = false; break;
++			case "FEED" : $this->isAtom = false; break;
+ 			case "ITEM" :
+ 			case "ENTRY" : $this->inEntry = false; break;
+ 			case "TITLE" : $this->isEntryTitle = false; break;
+@@ -107,16 +111,45 @@
+ 	}
+ 
+ 	function XMLcharacterData($parser, $data){
+-		if($this->inEntry) {
+-			$curID = $this->curID;
+-			if($this->isDate) {
+-				$data = str_replace("T"," ",$data);
+-				$data = str_replace("Z"," ",$data);
+-				$this->rssData[$curID]["date"] = $data;
++		if($this->isRSS||$this->isAtom) {
++			if($this->inEntry) {
++				$curID = $this->curID;
++				if($this->isDate) {
++					$this->rssData[$curID]["date"] = array();
++					if($this->isRSS) {
++						$data = explode(" ",$data);
++						$this->rssData[$curID]["date"]["year"] = $data[3];
++						switch($data[2]) {
++							case "Jan" : $this->rssData[$curID]["date"]["month"] = "01"; break;
++							case "Feb" : $this->rssData[$curID]["date"]["month"] = "02"; break;
++							case "Mar" : $this->rssData[$curID]["date"]["month"] = "03"; break;
++							case "Apr" : $this->rssData[$curID]["date"]["month"] = "04"; break;
++							case "May" : $this->rssData[$curID]["date"]["month"] = "05"; break;
++							case "Jun" : $this->rssData[$curID]["date"]["month"] = "06"; break;
++							case "Jul" : $this->rssData[$curID]["date"]["month"] = "07"; break;
++							case "Aug" : $this->rssData[$curID]["date"]["month"] = "08"; break;
++							case "Sep" : $this->rssData[$curID]["date"]["month"] = "09"; break;
++							case "Oct" : $this->rssData[$curID]["date"]["month"] = "10"; break;
++							case "Nov" : $this->rssData[$curID]["date"]["month"] = "11"; break;
++							case "Dec" : $this->rssData[$curID]["date"]["month"] = "12"; break;
++						}
++						
++						$this->rssData[$curID]["date"]["day"] = $data[1];
++					}else if($this->isAtom) {
++						ereg('^[0-9\-]*',$data,$data);
++						$data = explode("-",$data[0]);
++						$this->rssData[$curID]["date"]["year"] = $data[0];
++						$this->rssData[$curID]["date"]["month"] = $data[1];
++						$this->rssData[$curID]["date"]["day"] = $data[2];
++
++					}
++					
++				}
++				if($this->isEntryTitle) $this->rssData[$curID]["title"] = $data;
++				if($this->isDiv) $this->rssData[$curID]["div"] .= $data;
+ 			}
+-			if($this->isEntryTitle) $this->rssData[$curID]["title"] = $data;
+-			if($this->isDiv) $this->rssData[$curID]["div"] .= $data;
+ 		}
++
+ 	}
+ 
+ }
+
+
+
+From matador at berlios.de  Sat Mar 25 13:08:11 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Sat, 25 Mar 2006 13:08:11 +0100
+Subject: [Oplug-planet] r28 - /
+Message-ID: <200603251208.k2PC8B5r018314@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-25 13:07:59 +0100 (Sat, 25 Mar 2006)
+New Revision: 28
+
+Modified:
+   go_planet.php
+   rss_class.php
+Log:
+Utworzylem funkcje publiczne do wyciagania danych z klasy, dla wiekszej 
+kontroli..
+
+
+Modified: go_planet.php
+===================================================================
+--- go_planet.php	2006-03-25 11:32:19 UTC (rev 27)
++++ go_planet.php	2006-03-25 12:07:59 UTC (rev 28)
+@@ -31,9 +31,9 @@
+ 
+ while($a<=$rss->curID) {
+ 	print "<div class=\"notka\">";
+-	print "<h2 class=\"tytul\">".$rss->rssData[$a]["title"]."</h2>";
++	print "<h2 class=\"tytul\">".$rss->get_title($a)."</h2>";
+ 	print "<div class=\"data\">".$rss->get_data_string($a)."</div>";
+-	print "<div class=\"tresc\">".$rss->rssData[$a]["div"]."</div>";
++	print "<div class=\"tresc\">".$rss->get_content($a)."</div>";
+ 	print "</div>";
+ 	$a++;
+ }
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-25 11:32:19 UTC (rev 27)
++++ rss_class.php	2006-03-25 12:07:59 UTC (rev 28)
+@@ -3,7 +3,9 @@
+ // Na razie nie jest to duzo, ale od czegos trzeba zaczac...
+ 
+ //Metody publiczne:
+-//	RSS(); - konstruktor;
++//	RSS($chanfile); - konstruktor; Jako parametr pobiera nazwe pliku z kanalami.
++//  print_credits() - wyswietla info..
++//  get_data_string($id) - wyswietla date posta o numerze $id..
+ 
+ class RSS {
+ 	var $debug = true; // flaga zarezerwowana
+@@ -50,10 +52,19 @@
+ 
+ 	}
+ 
++
++	function get_title($id) {
++		return $this->rssData[$id]["title"];
++	}
++
+ 	function get_data_string($id) {
+ 		return $this->rssData[$id]["date"]["day"]."/".$this->rssData[$id]["date"]["month"]."/".$this->rssData[$id]["date"]["year"];
+ 	}
+ 
++	function get_content($id) {
++		return $this->rssData[$id]["div"];
++	}
++
+ 	function get_channels($chanfile) {
+ 		
+ 		$this->channels = file($chanfile);
+
+
+
+From matador at berlios.de  Sat Mar 25 13:34:10 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Sat, 25 Mar 2006 13:34:10 +0100
+Subject: [Oplug-planet] r29 - /
+Message-ID: <200603251234.k2PCYA0I028938@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-25 13:34:01 +0100 (Sat, 25 Mar 2006)
+New Revision: 29
+
+Modified:
+   rss_class.php
+Log:
+Juz dziala <br/> w bloggerze.. Niech zyje postep :]
+
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-25 12:07:59 UTC (rev 28)
++++ rss_class.php	2006-03-25 12:34:01 UTC (rev 29)
+@@ -109,6 +109,7 @@
+ 
+ 	function endElement($parser, $name) {
+ 		switch($name) {
++			case "BR" : if($this->isAtom) $this->rssData[$this->curID]["div"] .= "<br/>"; break;
+ 			case "RSS" : $this->isRSS = false; break;
+ 			case "FEED" : $this->isAtom = false; break;
+ 			case "ITEM" :
+
+
+
+From matador at berlios.de  Sat Mar 25 14:16:21 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Sat, 25 Mar 2006 14:16:21 +0100
+Subject: [Oplug-planet] r30 - /
+Message-ID: <200603251316.k2PDGLC7013366@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-25 14:16:19 +0100 (Sat, 25 Mar 2006)
+New Revision: 30
+
+Modified:
+   rss_class.php
+Log:
+Dodalem obsluge obrazkow i linkow z Bloggerowego Atomu.. Eh Szkoda, ze 
+Blogger udostepnia RSS tylko w wersji PRO.. Wszystko by bylo prostsze :]
+
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-25 12:34:01 UTC (rev 29)
++++ rss_class.php	2006-03-25 13:16:19 UTC (rev 30)
+@@ -102,6 +102,8 @@
+ 			case "DIV" : $this->isDiv = true; break;
+ 			case "PUBDATE" :
+ 			case "CREATED" : $this->isDate = true; break;
++			case "IMG" : if($this->isAtom) $this->rssData[$this->curID]["div"] .= "<img src=\"".$attrs["SRC"]."\" alt=\"\">"; break;
++			case "A" : if($this->isAtom) $this->rssData[$this->curID]["div"] .= "<a href=\"".$attrs["HREF"]."\">"; break;
+ 		}
+  
+ 
+@@ -119,6 +121,7 @@
+ 			case "DIV" : $this->isDiv = false; break;
+ 			case "PUBDATE" :
+ 			case "CREATED" : $this->isDate = false; break;
++			case "A" : if($this->isAtom) $this->rssData[$this->curID]["div"] .= "</a>"; break;
+ 		}
+ 	}
+ 
+
+
+
+From t.karbownicki at gmail.com  Sun Mar 26 03:28:14 2006
+From: t.karbownicki at gmail.com (Tomasz Karbownicki)
+Date: Sun, 26 Mar 2006 03:28:14 +0200
+Subject: [Oplug-planet] r27 - /
+In-Reply-To: <200603251132.k2PBWLrl031810@sheep.berlios.de>
+References: <200603251132.k2PBWLrl031810@sheep.berlios.de>
+Message-ID: <4425EE2E.7010702@gmail.com>
+
+matador at BerliOS napisa?(a):
+
+>Ujednolicenia daty dla obydwu na razie wspieranych systemow blogowych
+>  
+>
+A gdyby z?o?y? dat? w liczb? o postaci ROKmiesi?cDZIE? i wg takiej 
+liczby sortowa? kolejno?? notek?
+
+
+From staszkoof at gmail.com  Sun Mar 26 10:33:00 2006
+From: staszkoof at gmail.com (Martin)
+Date: Sun, 26 Mar 2006 10:33:00 +0200
+Subject: [Oplug-planet] r27 - /
+In-Reply-To: <4425EE2E.7010702@gmail.com>
+References: <200603251132.k2PBWLrl031810@sheep.berlios.de>
+	<4425EE2E.7010702@gmail.com>
+Message-ID: <20060326103300.939519dc.staszkoof@gmail.com>
+
+On Sun, 26 Mar 2006 03:28:14 +0200
+Tomasz Karbownicki <t.karbownicki at gmail.com> wrote:
+
+> matador at BerliOS napisa?(a):
+> 
+> >Ujednolicenia daty dla obydwu na razie wspieranych systemow blogowych
+> >  
+> >
+> A gdyby z?o?y? dat? w liczb? o postaci ROKmiesi?cDZIE? i wg takiej 
+> liczby sortowa? kolejno?? notek?
+> _______________________________________________
+Dobry pomysl.. Bo juz chcialem  komplikowac :]
+
+
+From matador at berlios.de  Sun Mar 26 17:49:52 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Sun, 26 Mar 2006 17:49:52 +0200
+Subject: [Oplug-planet] r31 - /
+Message-ID: <200603261549.k2QFnqSH000962@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-26 17:49:52 +0200 (Sun, 26 Mar 2006)
+New Revision: 31
+
+Modified:
+   rss_class.php
+Log:
+Dodalem metode do klasy RSS odpowedzialna za sortowanie postow od 
+najnowszego do najstarszego...
+
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-25 13:16:19 UTC (rev 30)
++++ rss_class.php	2006-03-26 15:49:52 UTC (rev 31)
+@@ -4,8 +4,11 @@
+ 
+ //Metody publiczne:
+ //	RSS($chanfile); - konstruktor; Jako parametr pobiera nazwe pliku z kanalami.
+-//  print_credits() - wyswietla info..
+-//  get_data_string($id) - wyswietla date posta o numerze $id..
++//	print_credits() - wyswietla info..
++//	get_data_string($id) - wyswietla date posta o numerze $id..
++//	get_title($id)
++//	get_content($id)
++//	get_short_content($id)
+ 
+ class RSS {
+ 	var $debug = true; // flaga zarezerwowana
+@@ -32,6 +35,7 @@
+ 	var $isRSS = false;
+ 	var $isAtom = false;
+ 
++
+ 	
+ 
+ 	function RSS($chanfile) {
+@@ -43,9 +47,27 @@
+ 			ereg('^[A-Za-z0-9:\/\.\-]*',$this->channels[$a++],$chan);
+ 			$this->parse($chan[0]);
+ 		}
++		
++		$this->sort_posts();
+ 
+ 	}
+ 
++	function sort_posts() { // Sortowanie babelkowe :]
++		$a = 0; $b = 0;
++		while($a <= $this->curID-1) {
++			$b=0;
++			while($b <= $this->curID-1) {
++				if($this->rssData[$b]["date"]["num"] < $this->rssData[$b+1]["date"]["num"]) {
++					$temp = $this->rssData[$b];
++					$this->rssData[$b] = $this->rssData[$b+1];
++					$this->rssData[$b+1] = $temp;
++				}
++			$b++;
++			}
++		$a++;
++		}
++	}
++
+ 	function print_credits() {
+ 		print "RSS feed reader v" . $this->version . " by OpLUG<br/>";
+ 		print "RSS feed and Blogger Atom support<br/>";
+@@ -58,6 +80,7 @@
+ 	}
+ 
+ 	function get_data_string($id) {
++		print $this->rssData[$id]["date"]["num"]."<br/>";
+ 		return $this->rssData[$id]["date"]["day"]."/".$this->rssData[$id]["date"]["month"]."/".$this->rssData[$id]["date"]["year"];
+ 	}
+ 
+@@ -72,6 +95,10 @@
+ 		
+ 	}
+ 
++	function get_short_content($id) {
++// Czeka na implementacje..
++	}
++
+ 	function parse($channel) {
+ 		$this->RSSparser = xml_parser_create();
+ 		xml_set_element_handler($this->RSSparser,array(&$this,"startElement"),array(&$this,"endElement"));
+@@ -150,12 +177,14 @@
+ 						}
+ 						
+ 						$this->rssData[$curID]["date"]["day"] = $data[1];
++						$this->rssData[$curID]["date"]["num"] = $data[3].$this->rssData[$curID]["date"]["month"].$data[1];
+ 					}else if($this->isAtom) {
+ 						ereg('^[0-9\-]*',$data,$data);
+ 						$data = explode("-",$data[0]);
+ 						$this->rssData[$curID]["date"]["year"] = $data[0];
+ 						$this->rssData[$curID]["date"]["month"] = $data[1];
+ 						$this->rssData[$curID]["date"]["day"] = $data[2];
++						$this->rssData[$curID]["date"]["num"] = $data[0].$data[1].$data[2];
+ 
+ 					}
+ 					
+
+
+
+From citizen at berlios.de  Sun Mar 26 18:07:46 2006
+From: citizen at berlios.de (citizen at berlios.de)
+Date: Sun, 26 Mar 2006 18:07:46 +0200
+Subject: [Oplug-planet] r32 - /
+Message-ID: <200603261607.k2QG7k9p003847@sheep.berlios.de>
+
+Author: citizen
+Date: 2006-03-26 18:07:39 +0200 (Sun, 26 Mar 2006)
+New Revision: 32
+
+Modified:
+   rss_class.php
+Log:
+- schowalem numerek po ktorym sa sortowane notki. Smiga jak szalone !
+
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-26 15:49:52 UTC (rev 31)
++++ rss_class.php	2006-03-26 16:07:39 UTC (rev 32)
+@@ -80,7 +80,7 @@
+ 	}
+ 
+ 	function get_data_string($id) {
+-		print $this->rssData[$id]["date"]["num"]."<br/>";
++		//print $this->rssData[$id]["date"]["num"]."<br/>";
+ 		return $this->rssData[$id]["date"]["day"]."/".$this->rssData[$id]["date"]["month"]."/".$this->rssData[$id]["date"]["year"];
+ 	}
+ 
+
+
+
+From t.karbownicki at gmail.com  Sun Mar 26 18:14:12 2006
+From: t.karbownicki at gmail.com (Tomasz Karbownicki)
+Date: Sun, 26 Mar 2006 18:14:12 +0200
+Subject: [Oplug-planet] Pytanie o atom blogspota
+Message-ID: <4426BDD4.803@gmail.com>
+
+Witam
+
+Czy atom blogspota te? mo?e dawkowa? wpisy, np 5 ostatnich?
+
+A co do problem?w z atomem to w helpie blogspota na samym dole znalaz?em:
+"If you would rather have RSS, give FeedBurner 
+<http://www.feedburner.com/> a try."
+Nie mam tam konta wi?c nie sprawdzi?em ale wygl?da na to ?e mo?na 
+przekonwertowa? sobie atoma na RSSa i skr?ci? swoje cierpienie ;)
+
+Pozdrawiam.
+
+
+
+
+From matador at berlios.de  Sun Mar 26 18:17:44 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Sun, 26 Mar 2006 18:17:44 +0200
+Subject: [Oplug-planet] r33 - /
+Message-ID: <200603261617.k2QGHi4N005845@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-26 18:17:44 +0200 (Sun, 26 Mar 2006)
+New Revision: 33
+
+Modified:
+   go_planet.php
+   rss_class.php
+Log:
+Dodalem parsowanie autora posta..
+
+
+Modified: go_planet.php
+===================================================================
+--- go_planet.php	2006-03-26 16:07:39 UTC (rev 32)
++++ go_planet.php	2006-03-26 16:17:44 UTC (rev 33)
+@@ -32,6 +32,7 @@
+ while($a<=$rss->curID) {
+ 	print "<div class=\"notka\">";
+ 	print "<h2 class=\"tytul\">".$rss->get_title($a)."</h2>";
++	print "<div class=\"autor\">".$rss->get_author($a)."</div>";
+ 	print "<div class=\"data\">".$rss->get_data_string($a)."</div>";
+ 	print "<div class=\"tresc\">".$rss->get_content($a)."</div>";
+ 	print "</div>";
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-26 16:07:39 UTC (rev 32)
++++ rss_class.php	2006-03-26 16:17:44 UTC (rev 33)
+@@ -31,6 +31,7 @@
+ 	var $isEntryTitle = false;
+ 	var $isDiv = false;
+ 	var $isID = false;
++	var $isAuthor = false;
+ 
+ 	var $isRSS = false;
+ 	var $isAtom = false;
+@@ -79,6 +80,10 @@
+ 		return $this->rssData[$id]["title"];
+ 	}
+ 
++	function get_author($id) {
++		return $this->rssData[$id]["author"];
++	}
++
+ 	function get_data_string($id) {
+ 		//print $this->rssData[$id]["date"]["num"]."<br/>";
+ 		return $this->rssData[$id]["date"]["day"]."/".$this->rssData[$id]["date"]["month"]."/".$this->rssData[$id]["date"]["year"];
+@@ -129,6 +134,8 @@
+ 			case "DIV" : $this->isDiv = true; break;
+ 			case "PUBDATE" :
+ 			case "CREATED" : $this->isDate = true; break;
++			case "NAME" :
++			case "AUTHOR" : $this->isAuthor = true; break;
+ 			case "IMG" : if($this->isAtom) $this->rssData[$this->curID]["div"] .= "<img src=\"".$attrs["SRC"]."\" alt=\"\">"; break;
+ 			case "A" : if($this->isAtom) $this->rssData[$this->curID]["div"] .= "<a href=\"".$attrs["HREF"]."\">"; break;
+ 		}
+@@ -148,6 +155,8 @@
+ 			case "DIV" : $this->isDiv = false; break;
+ 			case "PUBDATE" :
+ 			case "CREATED" : $this->isDate = false; break;
++			case "NAME" :
++			case "AUTHOR" : $this->isAuthor = false; break;
+ 			case "A" : if($this->isAtom) $this->rssData[$this->curID]["div"] .= "</a>"; break;
+ 		}
+ 	}
+@@ -191,6 +200,8 @@
+ 				}
+ 				if($this->isEntryTitle) $this->rssData[$curID]["title"] = $data;
+ 				if($this->isDiv) $this->rssData[$curID]["div"] .= $data;
++
++				if($this->isAuthor) $this->rssData[$curID]["author"] = $data;
+ 			}
+ 		}
+ 
+
+
+
+From staszkoof at gmail.com  Sun Mar 26 18:23:19 2006
+From: staszkoof at gmail.com (Martin)
+Date: Sun, 26 Mar 2006 18:23:19 +0200
+Subject: [Oplug-planet] Pytanie o atom blogspota
+In-Reply-To: <4426BDD4.803@gmail.com>
+References: <4426BDD4.803@gmail.com>
+Message-ID: <20060326182319.2a34611e.staszkoof@gmail.com>
+
+On Sun, 26 Mar 2006 18:14:12 +0200
+Tomasz Karbownicki <t.karbownicki at gmail.com> wrote:
+
+> Witam
+> 
+> Czy atom blogspota te? mo?e dawkowa? wpisy, np 5 ostatnich?
+> 
+> A co do problem?w z atomem to w helpie blogspota na samym dole znalaz?em:
+> "If you would rather have RSS, give FeedBurner 
+> <http://www.feedburner.com/> a try."
+> Nie mam tam konta wi?c nie sprawdzi?em ale wygl?da na to ?e mo?na 
+> przekonwertowa? sobie atoma na RSSa i skr?ci? swoje cierpienie ;)
+> 
+> Pozdrawiam.
+> 
+Niestety nie mozna w ten sposob regulowac ilosci postow, ale da sie to zrobic w parserze :].. Co do feedburnera juz widzialem gdzies ta nazwe, ale jakos nie sprawdzilem..
+
+
+From staszkoof at gmail.com  Sun Mar 26 18:23:19 2006
+From: staszkoof at gmail.com (Martin)
+Date: Sun, 26 Mar 2006 18:23:19 +0200
+Subject: [Oplug-planet] Pytanie o atom blogspota
+In-Reply-To: <4426BDD4.803@gmail.com>
+References: <4426BDD4.803@gmail.com>
+Message-ID: <20060326182319.2a34611e.staszkoof@gmail.com>
+
+On Sun, 26 Mar 2006 18:14:12 +0200
+Tomasz Karbownicki <t.karbownicki at gmail.com> wrote:
+
+> Witam
+> 
+> Czy atom blogspota te? mo?e dawkowa? wpisy, np 5 ostatnich?
+> 
+> A co do problem?w z atomem to w helpie blogspota na samym dole znalaz?em:
+> "If you would rather have RSS, give FeedBurner 
+> <http://www.feedburner.com/> a try."
+> Nie mam tam konta wi?c nie sprawdzi?em ale wygl?da na to ?e mo?na 
+> przekonwertowa? sobie atoma na RSSa i skr?ci? swoje cierpienie ;)
+> 
+> Pozdrawiam.
+> 
+Niestety nie mozna w ten sposob regulowac ilosci postow, ale da sie to zrobic w parserze :].. Co do feedburnera juz widzialem gdzies ta nazwe, ale jakos nie sprawdzilem..
+
+
+From citizen at berlios.de  Sun Mar 26 19:25:43 2006
+From: citizen at berlios.de (citizen at berlios.de)
+Date: Sun, 26 Mar 2006 19:25:43 +0200
+Subject: [Oplug-planet] r34 - /
+Message-ID: <200603261725.k2QHPhDV008070@sheep.berlios.de>
+
+Author: citizen
+Date: 2006-03-26 19:25:37 +0200 (Sun, 26 Mar 2006)
+New Revision: 34
+
+Modified:
+   channels.rss
+Log:
+- nowa porcja blogow
+
+
+Modified: channels.rss
+===================================================================
+--- channels.rss	2006-03-26 16:17:44 UTC (rev 33)
++++ channels.rss	2006-03-26 17:25:37 UTC (rev 34)
+@@ -1,2 +1,4 @@
+ http://oplug.blogspot.com/atom.xml
+-http://citizen.jogger.pl/rss/content/html/2
++http://citizen.jogger.pl/rss/content/html/10
++http://fixxxer.jogger.pl/rss/content/html/10
++http://mmazur.jogger.pl/rss/content/html/10
+
+
+
+From matador at berlios.de  Mon Mar 27 22:18:46 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Mon, 27 Mar 2006 22:18:46 +0200
+Subject: [Oplug-planet] r35 - /
+Message-ID: <200603272018.k2RKIkTu009429@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-27 22:18:46 +0200 (Mon, 27 Mar 2006)
+New Revision: 35
+
+Modified:
+   go_planet.php
+   rss_class.php
+Log:
+Dodalem ograniczenie ilosci wczytywanych postow...
+
+
+
+Modified: go_planet.php
+===================================================================
+--- go_planet.php	2006-03-26 17:25:37 UTC (rev 34)
++++ go_planet.php	2006-03-27 20:18:46 UTC (rev 35)
+@@ -25,7 +25,7 @@
+ 
+ require_once("rss_class.php");
+ 
+-$rss = new RSS("channels.rss");
++$rss = new RSS("channels.rss",3);
+ 
+ $a=0;
+ 
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-26 17:25:37 UTC (rev 34)
++++ rss_class.php	2006-03-27 20:18:46 UTC (rev 35)
+@@ -3,7 +3,7 @@
+ // Na razie nie jest to duzo, ale od czegos trzeba zaczac...
+ 
+ //Metody publiczne:
+-//	RSS($chanfile); - konstruktor; Jako parametr pobiera nazwe pliku z kanalami.
++//	RSS($chanfile,$limit); - konstruktor; Jako parametr pobiera nazwe pliku z kanalami i liczbe postow z kanalu do pobrania
+ //	print_credits() - wyswietla info..
+ //	get_data_string($id) - wyswietla date posta o numerze $id..
+ //	get_title($id)
+@@ -36,15 +36,20 @@
+ 	var $isRSS = false;
+ 	var $isAtom = false;
+ 
++	var $counter = 0;
++	var $post_limit;
+ 
++
+ 	
+ 
+-	function RSS($chanfile) {
++	function RSS($chanfile,$limit) {
++		$this->post_limit = $limit;
+ 		$this->get_channels($chanfile);
+ 
+ 		$a=0;
+ 
+ 		while($this->channels[$a]!=null) {
++			$this->counter = 0;
+ 			ereg('^[A-Za-z0-9:\/\.\-]*',$this->channels[$a++],$chan);
+ 			$this->parse($chan[0]);
+ 		}
+@@ -128,7 +133,11 @@
+ 			case "RSS" : $this->isRSS = true; break;
+ 			case "FEED" : $this->isAtom = true; break;
+ 			case "ITEM" :
+-			case "ENTRY" : $this->rssData[] = array(); $this->curID++; $this->inEntry = true; break;
++			case "ENTRY" :
++				{
++					if($this->counter >= $this->post_limit) break;
++					$this->rssData[] = array(); $this->curID++; $this->inEntry = true; $this->counter++; break;
++				}
+ 			case "TITLE" : $this->isEntryTitle = true; break;
+ 			case "DESCRIPTION" :
+ 			case "DIV" : $this->isDiv = true; break;
+
+
+
+From staszkoof at gmail.com  Tue Mar 28 11:34:23 2006
+From: staszkoof at gmail.com (Akaryuu)
+Date: Tue, 28 Mar 2006 11:34:23 +0200
+Subject: [Oplug-planet] r35 - /
+In-Reply-To: <200603272018.k2RKIkTu009429@sheep.berlios.de>
+References: <200603272018.k2RKIkTu009429@sheep.berlios.de>
+Message-ID: <61f87eb30603280134y15509c8crc2c6de218fa0520d@mail.gmail.com>
+
+Trzeba cos zrobic, bo projekt odbiega od zalozen :] Zamiast
+generowania strony co jakis czas, i wyswietlania gotowej, jest ona
+generowana na biezaco, ale nie sadze, ze przy obecnym ruchu bedzie to
+powodowac szczegolne obciazenie ...
+
+
+From t.karbownicki at gmail.com  Tue Mar 28 17:15:39 2006
+From: t.karbownicki at gmail.com (Tomasz Karbownicki)
+Date: Tue, 28 Mar 2006 17:15:39 +0200
+Subject: [Oplug-planet] r35 - /
+In-Reply-To: <61f87eb30603280134y15509c8crc2c6de218fa0520d@mail.gmail.com>
+References: <200603272018.k2RKIkTu009429@sheep.berlios.de> <61f87eb30603280134y15509c8crc2c6de218fa0520d@mail.gmail.com>
+Message-ID: <4429531B.30805@gmail.com>
+
+Akaryuu napisa?(a):
+
+>Trzeba cos zrobic, bo projekt odbiega od zalozen :] Zamiast
+>generowania strony co jakis czas, i wyswietlania gotowej, jest ona
+>generowana na biezaco, ale nie sadze, ze przy obecnym ruchu bedzie to
+>powodowac szczegolne obciazenie ...
+>  
+>
+Nie ca?kiem, bo na naszej stronie wisi skrypt bash'a,
+kt?ry co 5 minut ?ci?ga najnowsz? wersj? (o ile taka istnieje)
+a nast?pnie odpala go_planet.php a wynik zapisuje do index.html
+Czyli po wej?ciu na stron? widzicie tylko gotowy do pobrania index.html
+
+
+Matador: mo?esz dorobi? jeszcze wyci?ganie linka do notki, ?eby mo?na 
+by?o podlinkowa? tytu? ?
+
+
+From matador at berlios.de  Tue Mar 28 19:19:44 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Tue, 28 Mar 2006 19:19:44 +0200
+Subject: [Oplug-planet] r36 - /
+Message-ID: <200603281719.k2SHJiaJ022655@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-28 19:19:07 +0200 (Tue, 28 Mar 2006)
+New Revision: 36
+
+Modified:
+   go_planet.php
+Log:
+Sa linki i jeden tylko plik.. Minimalizacja.. Nie??
+
+
+Modified: go_planet.php
+===================================================================
+--- go_planet.php	2006-03-27 20:18:46 UTC (rev 35)
++++ go_planet.php	2006-03-28 17:19:07 UTC (rev 36)
+@@ -23,7 +23,6 @@
+ 
+ <?php
+ 
+-require_once("rss_class.php");
+ 
+ $rss = new RSS("channels.rss",3);
+ 
+@@ -32,6 +31,7 @@
+ while($a<=$rss->curID) {
+ 	print "<div class=\"notka\">";
+ 	print "<h2 class=\"tytul\">".$rss->get_title($a)."</h2>";
++//	print "<div class=\"link\">".$rss->get_link($a)."</div>";
+ 	print "<div class=\"autor\">".$rss->get_author($a)."</div>";
+ 	print "<div class=\"data\">".$rss->get_data_string($a)."</div>";
+ 	print "<div class=\"tresc\">".$rss->get_content($a)."</div>";
+@@ -43,6 +43,233 @@
+ $rss->print_credits();
+ print "</div>";
+ 
++// Klasa RSS umozliwia odczytywanie kanalow RSS i przetwarzanie interesujacych nas informacji na HTML.
++// Na razie nie jest to duzo, ale od czegos trzeba zaczac...
++
++//Metody publiczne:
++//	RSS($chanfile,$limit); - konstruktor; Jako parametr pobiera nazwe pliku z kanalami i liczbe postow z kanalu do pobrania
++//	print_credits() - wyswietla info..
++//	get_data_string($id) - wyswietla date posta o numerze $id..
++//	get_title($id)
++//	get_content($id)
++//	get_short_content($id)
++
++class RSS {
++	var $debug = true; // flaga zarezerwowana
++
++	var $url_base = "http://linux.opole.pl/";
++	var $filename = "index.html"; // Plik do wygenerowania
++	var $filename_short = "planetka.php"; // plik ze skrotami..
++	var $channels = array(); // tablica kanalow do przegladniecia
++	var $version = "1.0";
++
++	var $RSSparser; // Maszynka do wyciagania informacji z RSS :]
++
++	var $rssVersion = 2.0;
++	var $rssInfo = array(); // Info na temat feeda
++	var $rssData = array(); // A tutaj wlasnie beda wszystkie informacje wyciagniete z RSS'a
++
++	var $curID = -1;
++	var $inEntry = false;
++	var $isDate = false;
++	var $isEntryTitle = false;
++	var $isDiv = false;
++	var $isID = false;
++	var $isAuthor = false;
++	var $isLink = false;
++
++	var $isRSS = false;
++	var $isAtom = false;
++
++	var $counter = 0;
++	var $post_limit;
++
++
++	
++
++	function RSS($chanfile,$limit) {
++		$this->post_limit = $limit;
++		$this->get_channels($chanfile);
++
++		$a=0;
++
++		while($this->channels[$a]!=null) {
++			$this->counter = 0;
++			ereg('^[A-Za-z0-9:\/\.\-]*',$this->channels[$a++],$chan);
++			$this->parse($chan[0]);
++		}
++		
++		$this->sort_posts();
++
++	}
++
++	function sort_posts() { // Sortowanie babelkowe :]
++		$a = 0; $b = 0;
++		while($a <= $this->curID-1) {
++			$b=0;
++			while($b <= $this->curID-1) {
++				if($this->rssData[$b]["date"]["num"] < $this->rssData[$b+1]["date"]["num"]) {
++					$temp = $this->rssData[$b];
++					$this->rssData[$b] = $this->rssData[$b+1];
++					$this->rssData[$b+1] = $temp;
++				}
++			$b++;
++			}
++		$a++;
++		}
++	}
++
++	function print_credits() {
++		print "RSS feed reader v" . $this->version . " by OpLUG<br/>";
++		print "RSS feed and Blogger Atom support<br/>";
++
++	}
++
++
++	function get_title($id) {
++		return $this->rssData[$id]["title"];
++	}
++
++	function get_author($id) {
++		return $this->rssData[$id]["author"];
++	}
++
++	function get_link($id) {
++		return $this->rssData[$id]["link"];
++	}
++
++	function get_data_string($id) {
++		//print $this->rssData[$id]["date"]["num"]."<br/>";
++		return $this->rssData[$id]["date"]["day"]."/".$this->rssData[$id]["date"]["month"]."/".$this->rssData[$id]["date"]["year"];
++	}
++
++	function get_content($id) {
++		return $this->rssData[$id]["div"];
++	}
++
++	function get_channels($chanfile) {
++		
++		$this->channels = file($chanfile);
++		if(!($this->channels[0])) die("Brak kanalow.. Sprawd? plik ".$chanfile."<br/>");
++		
++	}
++
++	function get_short_content($id) {
++// Czeka na implementacje..
++	}
++
++	function parse($channel) {
++		$this->RSSparser = xml_parser_create();
++		xml_set_element_handler($this->RSSparser,array(&$this,"startElement"),array(&$this,"endElement"));
++		xml_set_character_data_handler($this->RSSparser, array(&$this, "XMLcharacterData"));
++		if (!($fp = fopen($channel, "r"))) {
++  		 die("Nie moge otworzyc kanalu ".$channel.". Zly adres???");
++		}
++
++		while ($data = fread($fp, 4096)) {
++   			if (!xml_parse($this->RSSparser, $data, feof($fp))) {
++       			die(sprintf("Blad XML: %s at line %d",
++                   xml_error_string(xml_get_error_code($this->RSSparser)),
++                   xml_get_current_line_number($this->RSSparser)));
++   			}
++		}
++		xml_parser_free($this->RSSparser);
++	}
++
++	function startElement($parser, $name, $attrs) {
++
++		switch($name) {
++			case "RSS" : $this->isRSS = true; break;
++			case "FEED" : $this->isAtom = true; break;
++			case "ITEM" :
++			case "ENTRY" :
++				{
++					if($this->counter >= $this->post_limit) break;
++					$this->rssData[] = array(); $this->curID++; $this->inEntry = true; $this->counter++; break;
++				}
++			case "TITLE" : $this->isEntryTitle = true; break;
++			case "DESCRIPTION" :
++			case "DIV" : $this->isDiv = true; break;
++			case "PUBDATE" :
++			case "CREATED" : $this->isDate = true; break;
++			case "NAME" :
++			case "AUTHOR" : $this->isAuthor = true; break;
++			case "LINK" : $this->isLink = true; break;
++			case "IMG" : if($this->isAtom) $this->rssData[$this->curID]["div"] .= "<img src=\"".$attrs["SRC"]."\" alt=\"\">"; break;
++			case "A" : if($this->isAtom) $this->rssData[$this->curID]["div"] .= "<a href=\"".$attrs["HREF"]."\">"; break;
++		}
++ 
++
++	}
++
++	function endElement($parser, $name) {
++		switch($name) {
++			case "BR" : if($this->isAtom) $this->rssData[$this->curID]["div"] .= "<br/>"; break;
++			case "RSS" : $this->isRSS = false; break;
++			case "FEED" : $this->isAtom = false; break;
++			case "ITEM" :
++			case "ENTRY" : $this->inEntry = false; break;
++			case "TITLE" : $this->isEntryTitle = false; break;
++			case "DESCRIPTION" :
++			case "DIV" : $this->isDiv = false; break;
++			case "PUBDATE" :
++			case "CREATED" : $this->isDate = false; break;
++			case "NAME" :
++			case "AUTHOR" : $this->isAuthor = false; break;
++			case "LINK" : $this->isLink = false; break;
++			case "A" : if($this->isAtom) $this->rssData[$this->curID]["div"] .= "</a>"; break;
++		}
++	}
++
++	function XMLcharacterData($parser, $data){
++		if($this->isRSS||$this->isAtom) {
++			if($this->inEntry) {
++				$curID = $this->curID;
++				if($this->isDate) {
++					$this->rssData[$curID]["date"] = array();
++					if($this->isRSS) {
++						$data = explode(" ",$data);
++						$this->rssData[$curID]["date"]["year"] = $data[3];
++						switch($data[2]) {
++							case "Jan" : $this->rssData[$curID]["date"]["month"] = "01"; break;
++							case "Feb" : $this->rssData[$curID]["date"]["month"] = "02"; break;
++							case "Mar" : $this->rssData[$curID]["date"]["month"] = "03"; break;
++							case "Apr" : $this->rssData[$curID]["date"]["month"] = "04"; break;
++							case "May" : $this->rssData[$curID]["date"]["month"] = "05"; break;
++							case "Jun" : $this->rssData[$curID]["date"]["month"] = "06"; break;
++							case "Jul" : $this->rssData[$curID]["date"]["month"] = "07"; break;
++							case "Aug" : $this->rssData[$curID]["date"]["month"] = "08"; break;
++							case "Sep" : $this->rssData[$curID]["date"]["month"] = "09"; break;
++							case "Oct" : $this->rssData[$curID]["date"]["month"] = "10"; break;
++							case "Nov" : $this->rssData[$curID]["date"]["month"] = "11"; break;
++							case "Dec" : $this->rssData[$curID]["date"]["month"] = "12"; break;
++						}
++						
++						$this->rssData[$curID]["date"]["day"] = $data[1];
++						$this->rssData[$curID]["date"]["num"] = $data[3].$this->rssData[$curID]["date"]["month"].$data[1];
++					}else if($this->isAtom) {
++						ereg('^[0-9\-]*',$data,$data);
++						$data = explode("-",$data[0]);
++						$this->rssData[$curID]["date"]["year"] = $data[0];
++						$this->rssData[$curID]["date"]["month"] = $data[1];
++						$this->rssData[$curID]["date"]["day"] = $data[2];
++						$this->rssData[$curID]["date"]["num"] = $data[0].$data[1].$data[2];
++
++					}
++					
++				}
++				if($this->isEntryTitle) $this->rssData[$curID]["title"] = $data;
++				if($this->isDiv) $this->rssData[$curID]["div"] .= $data;
++
++				if($this->isAuthor) $this->rssData[$curID]["author"] = $data;
++				if($this->isLink) $this->rssData[$curID]["link"] = $data;
++			}
++		}
++
++	}
++
++}
++
+ ?>
+ 
+ </div>
+
+
+
+From matador at berlios.de  Tue Mar 28 19:20:35 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Tue, 28 Mar 2006 19:20:35 +0200
+Subject: [Oplug-planet] r37 - /
+Message-ID: <200603281720.k2SHKZtk022837@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-28 19:20:34 +0200 (Tue, 28 Mar 2006)
+New Revision: 37
+
+Removed:
+   rss_class.php
+Log:
+Usunalem niepotrzebny plik..
+
+
+Deleted: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-28 17:19:07 UTC (rev 36)
++++ rss_class.php	2006-03-28 17:20:34 UTC (rev 37)
+@@ -1,221 +0,0 @@
+-<?php
+-// Klasa RSS umozliwia odczytywanie kanalow RSS i przetwarzanie interesujacych nas informacji na HTML.
+-// Na razie nie jest to duzo, ale od czegos trzeba zaczac...
+-
+-//Metody publiczne:
+-//	RSS($chanfile,$limit); - konstruktor; Jako parametr pobiera nazwe pliku z kanalami i liczbe postow z kanalu do pobrania
+-//	print_credits() - wyswietla info..
+-//	get_data_string($id) - wyswietla date posta o numerze $id..
+-//	get_title($id)
+-//	get_content($id)
+-//	get_short_content($id)
+-
+-class RSS {
+-	var $debug = true; // flaga zarezerwowana
+-
+-	var $url_base = "http://linux.opole.pl/";
+-	var $filename = "index.html"; // Plik do wygenerowania
+-	var $filename_short = "planetka.php"; // plik ze skrotami..
+-	var $channels = array(); // tablica kanalow do przegladniecia
+-	var $version = "1.0";
+-
+-	var $RSSparser; // Maszynka do wyciagania informacji z RSS :]
+-
+-	var $rssVersion = 2.0;
+-	var $rssInfo = array(); // Info na temat feeda
+-	var $rssData = array(); // A tutaj wlasnie beda wszystkie informacje wyciagniete z RSS'a
+-
+-	var $curID = -1;
+-	var $inEntry = false;
+-	var $isDate = false;
+-	var $isEntryTitle = false;
+-	var $isDiv = false;
+-	var $isID = false;
+-	var $isAuthor = false;
+-
+-	var $isRSS = false;
+-	var $isAtom = false;
+-
+-	var $counter = 0;
+-	var $post_limit;
+-
+-
+-	
+-
+-	function RSS($chanfile,$limit) {
+-		$this->post_limit = $limit;
+-		$this->get_channels($chanfile);
+-
+-		$a=0;
+-
+-		while($this->channels[$a]!=null) {
+-			$this->counter = 0;
+-			ereg('^[A-Za-z0-9:\/\.\-]*',$this->channels[$a++],$chan);
+-			$this->parse($chan[0]);
+-		}
+-		
+-		$this->sort_posts();
+-
+-	}
+-
+-	function sort_posts() { // Sortowanie babelkowe :]
+-		$a = 0; $b = 0;
+-		while($a <= $this->curID-1) {
+-			$b=0;
+-			while($b <= $this->curID-1) {
+-				if($this->rssData[$b]["date"]["num"] < $this->rssData[$b+1]["date"]["num"]) {
+-					$temp = $this->rssData[$b];
+-					$this->rssData[$b] = $this->rssData[$b+1];
+-					$this->rssData[$b+1] = $temp;
+-				}
+-			$b++;
+-			}
+-		$a++;
+-		}
+-	}
+-
+-	function print_credits() {
+-		print "RSS feed reader v" . $this->version . " by OpLUG<br/>";
+-		print "RSS feed and Blogger Atom support<br/>";
+-
+-	}
+-
+-
+-	function get_title($id) {
+-		return $this->rssData[$id]["title"];
+-	}
+-
+-	function get_author($id) {
+-		return $this->rssData[$id]["author"];
+-	}
+-
+-	function get_data_string($id) {
+-		//print $this->rssData[$id]["date"]["num"]."<br/>";
+-		return $this->rssData[$id]["date"]["day"]."/".$this->rssData[$id]["date"]["month"]."/".$this->rssData[$id]["date"]["year"];
+-	}
+-
+-	function get_content($id) {
+-		return $this->rssData[$id]["div"];
+-	}
+-
+-	function get_channels($chanfile) {
+-		
+-		$this->channels = file($chanfile);
+-		if(!($this->channels[0])) die("Brak kanalow.. Sprawd? plik ".$chanfile."<br/>");
+-		
+-	}
+-
+-	function get_short_content($id) {
+-// Czeka na implementacje..
+-	}
+-
+-	function parse($channel) {
+-		$this->RSSparser = xml_parser_create();
+-		xml_set_element_handler($this->RSSparser,array(&$this,"startElement"),array(&$this,"endElement"));
+-		xml_set_character_data_handler($this->RSSparser, array(&$this, "XMLcharacterData"));
+-		if (!($fp = fopen($channel, "r"))) {
+-  		 die("Nie moge otworzyc kanalu ".$channel.". Zly adres???");
+-		}
+-
+-		while ($data = fread($fp, 4096)) {
+-   			if (!xml_parse($this->RSSparser, $data, feof($fp))) {
+-       			die(sprintf("Blad XML: %s at line %d",
+-                   xml_error_string(xml_get_error_code($this->RSSparser)),
+-                   xml_get_current_line_number($this->RSSparser)));
+-   			}
+-		}
+-		xml_parser_free($this->RSSparser);
+-	}
+-
+-	function startElement($parser, $name, $attrs) {
+-
+-		switch($name) {
+-			case "RSS" : $this->isRSS = true; break;
+-			case "FEED" : $this->isAtom = true; break;
+-			case "ITEM" :
+-			case "ENTRY" :
+-				{
+-					if($this->counter >= $this->post_limit) break;
+-					$this->rssData[] = array(); $this->curID++; $this->inEntry = true; $this->counter++; break;
+-				}
+-			case "TITLE" : $this->isEntryTitle = true; break;
+-			case "DESCRIPTION" :
+-			case "DIV" : $this->isDiv = true; break;
+-			case "PUBDATE" :
+-			case "CREATED" : $this->isDate = true; break;
+-			case "NAME" :
+-			case "AUTHOR" : $this->isAuthor = true; break;
+-			case "IMG" : if($this->isAtom) $this->rssData[$this->curID]["div"] .= "<img src=\"".$attrs["SRC"]."\" alt=\"\">"; break;
+-			case "A" : if($this->isAtom) $this->rssData[$this->curID]["div"] .= "<a href=\"".$attrs["HREF"]."\">"; break;
+-		}
+- 
+-
+-	}
+-
+-	function endElement($parser, $name) {
+-		switch($name) {
+-			case "BR" : if($this->isAtom) $this->rssData[$this->curID]["div"] .= "<br/>"; break;
+-			case "RSS" : $this->isRSS = false; break;
+-			case "FEED" : $this->isAtom = false; break;
+-			case "ITEM" :
+-			case "ENTRY" : $this->inEntry = false; break;
+-			case "TITLE" : $this->isEntryTitle = false; break;
+-			case "DESCRIPTION" :
+-			case "DIV" : $this->isDiv = false; break;
+-			case "PUBDATE" :
+-			case "CREATED" : $this->isDate = false; break;
+-			case "NAME" :
+-			case "AUTHOR" : $this->isAuthor = false; break;
+-			case "A" : if($this->isAtom) $this->rssData[$this->curID]["div"] .= "</a>"; break;
+-		}
+-	}
+-
+-	function XMLcharacterData($parser, $data){
+-		if($this->isRSS||$this->isAtom) {
+-			if($this->inEntry) {
+-				$curID = $this->curID;
+-				if($this->isDate) {
+-					$this->rssData[$curID]["date"] = array();
+-					if($this->isRSS) {
+-						$data = explode(" ",$data);
+-						$this->rssData[$curID]["date"]["year"] = $data[3];
+-						switch($data[2]) {
+-							case "Jan" : $this->rssData[$curID]["date"]["month"] = "01"; break;
+-							case "Feb" : $this->rssData[$curID]["date"]["month"] = "02"; break;
+-							case "Mar" : $this->rssData[$curID]["date"]["month"] = "03"; break;
+-							case "Apr" : $this->rssData[$curID]["date"]["month"] = "04"; break;
+-							case "May" : $this->rssData[$curID]["date"]["month"] = "05"; break;
+-							case "Jun" : $this->rssData[$curID]["date"]["month"] = "06"; break;
+-							case "Jul" : $this->rssData[$curID]["date"]["month"] = "07"; break;
+-							case "Aug" : $this->rssData[$curID]["date"]["month"] = "08"; break;
+-							case "Sep" : $this->rssData[$curID]["date"]["month"] = "09"; break;
+-							case "Oct" : $this->rssData[$curID]["date"]["month"] = "10"; break;
+-							case "Nov" : $this->rssData[$curID]["date"]["month"] = "11"; break;
+-							case "Dec" : $this->rssData[$curID]["date"]["month"] = "12"; break;
+-						}
+-						
+-						$this->rssData[$curID]["date"]["day"] = $data[1];
+-						$this->rssData[$curID]["date"]["num"] = $data[3].$this->rssData[$curID]["date"]["month"].$data[1];
+-					}else if($this->isAtom) {
+-						ereg('^[0-9\-]*',$data,$data);
+-						$data = explode("-",$data[0]);
+-						$this->rssData[$curID]["date"]["year"] = $data[0];
+-						$this->rssData[$curID]["date"]["month"] = $data[1];
+-						$this->rssData[$curID]["date"]["day"] = $data[2];
+-						$this->rssData[$curID]["date"]["num"] = $data[0].$data[1].$data[2];
+-
+-					}
+-					
+-				}
+-				if($this->isEntryTitle) $this->rssData[$curID]["title"] = $data;
+-				if($this->isDiv) $this->rssData[$curID]["div"] .= $data;
+-
+-				if($this->isAuthor) $this->rssData[$curID]["author"] = $data;
+-			}
+-		}
+-
+-	}
+-
+-}
+-
+-?>
+
+
+
+From staszkoof at gmail.com  Tue Mar 28 20:01:23 2006
+From: staszkoof at gmail.com (Martin)
+Date: Tue, 28 Mar 2006 20:01:23 +0200
+Subject: [Oplug-planet] r35 - /
+In-Reply-To: <4429531B.30805@gmail.com>
+References: <200603272018.k2RKIkTu009429@sheep.berlios.de>
+	<61f87eb30603280134y15509c8crc2c6de218fa0520d@mail.gmail.com>
+	<4429531B.30805@gmail.com>
+Message-ID: <20060328200123.4a11178b.staszkoof@gmail.com>
+
+> >
+> Nie ca?kiem, bo na naszej stronie wisi skrypt bash'a,
+> kt?ry co 5 minut ?ci?ga najnowsz? wersj? (o ile taka istnieje)
+> a nast?pnie odpala go_planet.php a wynik zapisuje do index.html
+> Czyli po wej?ciu na stron? widzicie tylko gotowy do pobrania index.html
+> 
+> 
+
+A wiec to eliminuje wszystkie moje watpliwosci i w ten sposob planeta jest almost done :]
+
+
+From citizen at berlios.de  Tue Mar 28 20:02:10 2006
+From: citizen at berlios.de (citizen at berlios.de)
+Date: Tue, 28 Mar 2006 20:02:10 +0200
+Subject: [Oplug-planet] r38 - /
+Message-ID: <200603281802.k2SI2AR6007937@sheep.berlios.de>
+
+Author: citizen
+Date: 2006-03-28 20:02:02 +0200 (Tue, 28 Mar 2006)
+New Revision: 38
+
+Modified:
+   go_planet.php
+   style.css
+Log:
+- Linki + style
+
+
+Modified: go_planet.php
+===================================================================
+--- go_planet.php	2006-03-28 17:20:34 UTC (rev 37)
++++ go_planet.php	2006-03-28 18:02:02 UTC (rev 38)
+@@ -30,8 +30,7 @@
+ 
+ while($a<=$rss->curID) {
+ 	print "<div class=\"notka\">";
+-	print "<h2 class=\"tytul\">".$rss->get_title($a)."</h2>";
+-//	print "<div class=\"link\">".$rss->get_link($a)."</div>";
++	print "<h2 class=\"tytul\"><a href=\"".$rss->get_link($a)."\">".$rss->get_title($a)."</a></h2>";
+ 	print "<div class=\"autor\">".$rss->get_author($a)."</div>";
+ 	print "<div class=\"data\">".$rss->get_data_string($a)."</div>";
+ 	print "<div class=\"tresc\">".$rss->get_content($a)."</div>";
+
+Modified: style.css
+===================================================================
+--- style.css	2006-03-28 17:20:34 UTC (rev 37)
++++ style.css	2006-03-28 18:02:02 UTC (rev 38)
+@@ -1,13 +1,3 @@
+-A:link {
+-	color: #bbb;
+-	text-decoration: none;
+-}
+-
+-A:visited {
+-	color: #bbb;
+-	text-decoration: none;
+-}
+-
+ body {
+ 	margin: 0;
+ 	padding: 0;
+@@ -23,7 +13,7 @@
+ 	background: url('http://www.encyclopedie-enligne.com/Images/2/200px-tux.png') top right no-repeat;
+ 	position: relative;
+ 	top: 100px;
+-	z-index: 2;
++	z-index: 1;
+ }
+ 
+ 	.baner a {
+@@ -31,6 +21,7 @@
+ 	padding-top: 57px;
+ 	font-size: 70px;
+ 	color: #000;
++	text-decoration: none;
+ 	}
+ 
+ .main {
+@@ -43,7 +34,6 @@
+   	border-top: 1px solid #485F00;
+   	border-left: 1px solid #485F00;
+   	border-right: 1px solid #485F00; 
+-	z-index: 1;	  	
+ }
+ 
+ 	.notka {
+@@ -53,10 +43,24 @@
+ 		.notka .tytul {
+ 			margin: 10px 0 4px 0;
+ 			padding: 0;
++			position: relative;
++			z-index: 2;
+ 		}
++
++			.notka .tytul a {
++				color: #000;
++				text-decoration: none;
++			}
++			
++		.notka .autor 
++			position: relative;
++			z-index: 2;
++		}
+ 		
+ 		.notka .data {
+ 			margin-bottom: 20px;
++			position: relative;
++			z-index: 2;
+ 		}
+ 		
+ 		.notka .tresc {
+@@ -64,6 +68,11 @@
+ 			border-bottom: 1px solid #CCC;
+ 			text-align: justify;
+ 		}
++
++			.notka .tresc a {
++				color: #bbb;
++				text-decoration: none;
++			}
+ 		
+ 	.credits {
+ 		color: #999;
+
+
+
+From citizen at berlios.de  Tue Mar 28 20:28:39 2006
+From: citizen at berlios.de (citizen at berlios.de)
+Date: Tue, 28 Mar 2006 20:28:39 +0200
+Subject: [Oplug-planet] r39 - /
+Message-ID: <200603281828.k2SISdPw017699@sheep.berlios.de>
+
+Author: citizen
+Date: 2006-03-28 20:28:35 +0200 (Tue, 28 Mar 2006)
+New Revision: 39
+
+Added:
+   tlo.png
+Modified:
+   go_planet.php
+   style.css
+Log:
+- dodany plik tla
+- poprawki w stylach
+
+
+Modified: go_planet.php
+===================================================================
+--- go_planet.php	2006-03-28 18:02:02 UTC (rev 38)
++++ go_planet.php	2006-03-28 18:28:35 UTC (rev 39)
+@@ -31,8 +31,7 @@
+ while($a<=$rss->curID) {
+ 	print "<div class=\"notka\">";
+ 	print "<h2 class=\"tytul\"><a href=\"".$rss->get_link($a)."\">".$rss->get_title($a)."</a></h2>";
+-	print "<div class=\"autor\">".$rss->get_author($a)."</div>";
+-	print "<div class=\"data\">".$rss->get_data_string($a)."</div>";
++	print "<div class=\"info\"><span class=\"autor\">".$rss->get_author($a)."</span> | <span class=\"data\">".$rss->get_data_string($a)."</span></div>";
+ 	print "<div class=\"tresc\">".$rss->get_content($a)."</div>";
+ 	print "</div>";
+ 	$a++;
+
+Modified: style.css
+===================================================================
+--- style.css	2006-03-28 18:02:02 UTC (rev 38)
++++ style.css	2006-03-28 18:28:35 UTC (rev 39)
+@@ -4,6 +4,7 @@
+ 	background-color: #92C400;
+ 	position: relative;
+ 	top: -100px;
++	background: #506a00 url('tlo.png') top left repeat-x;
+ }
+ 
+ .baner {
+@@ -52,27 +53,40 @@
+ 				text-decoration: none;
+ 			}
+ 			
+-		.notka .autor 
+-			position: relative;
+-			z-index: 2;
+-		}
+-		
+-		.notka .data {
++		.notka .info {
+ 			margin-bottom: 20px;
+-			position: relative;
+-			z-index: 2;
++			color: #CCC;
+ 		}
++			
++			.notka .info .autor {
++				position: relative;
++				z-index: 2;
++			}
++			
++			.notka .info .data {
++				
++				position: relative;
++				z-index: 2;
++			}
+ 		
+ 		.notka .tresc {
+ 			padding-bottom: 30px;
+ 			border-bottom: 1px solid #CCC;
+ 			text-align: justify;
++			line-height: 25px;
+ 		}
+ 
+ 			.notka .tresc a {
+-				color: #bbb;
++				color: #6B8F00;
+ 				text-decoration: none;
+ 			}
++			
++			.notka .tresc blockquote
++				{
++				border-left: 10px solid #91C300;
++				padding-left: 15px;
++				color: #5C4500;
++				}
+ 		
+ 	.credits {
+ 		color: #999;
+
+Added: tlo.png
+===================================================================
+(Binary files differ)
+
+
+Property changes on: tlo.png
+___________________________________________________________________
+Name: svn:mime-type
+   + application/octet-stream
+
+
+
+From t.karbownicki at gmail.com  Tue Mar 28 20:43:23 2006
+From: t.karbownicki at gmail.com (Tomasz Karbownicki)
+Date: Tue, 28 Mar 2006 20:43:23 +0200
+Subject: [Oplug-planet] r36 - /
+In-Reply-To: <200603281719.k2SHJiaJ022655@sheep.berlios.de>
+References: <200603281719.k2SHJiaJ022655@sheep.berlios.de>
+Message-ID: <442983CB.9070002@gmail.com>
+
+matador at BerliOS napisa?(a):
+
+>Sa linki i jeden tylko plik.. Minimalizacja.. Nie??
+>  
+>
+Przy dw?ch pierwszych notkach fixxxera nie pojawi? si? tytu?y, chocia? u 
+mnie na localhost s?. o.O
+
+
+From staszkoof at gmail.com  Tue Mar 28 21:42:44 2006
+From: staszkoof at gmail.com (Martin)
+Date: Tue, 28 Mar 2006 21:42:44 +0200
+Subject: [Oplug-planet] r36 - /
+In-Reply-To: <442983CB.9070002@gmail.com>
+References: <200603281719.k2SHJiaJ022655@sheep.berlios.de>
+	<442983CB.9070002@gmail.com>
+Message-ID: <20060328214244.27000c31.staszkoof@gmail.com>
+
+ 
+> >
+> Przy dw?ch pierwszych notkach fixxxera nie pojawi? si? tytu?y, chocia? u 
+> mnie na localhost s?. o.O
+
+Przyczyna: zle skonstruowany tytul w RSS w powyzszych postach. Nie mam pojecia jak i dlaczego?
+Efekt: podwojne przypisanie tytulu do jednej zmiennej raz tego wlasciwego a nastepnie zadnego..
+Rozwiazanie: Jezeli jest juz tytul, to nie przypisuj innego :]
+
+
+From matador at berlios.de  Tue Mar 28 21:40:45 2006
+From: matador at berlios.de (matador at BerliOS)
+Date: Tue, 28 Mar 2006 21:40:45 +0200
+Subject: [Oplug-planet] r40 - /
+Message-ID: <200603281940.k2SJej8I014509@sheep.berlios.de>
+
+Author: matador
+Date: 2006-03-28 21:40:42 +0200 (Tue, 28 Mar 2006)
+New Revision: 40
+
+Modified:
+   go_planet.php
+Log:
+Poprawienie parsowania tytulow
+
+
+Modified: go_planet.php
+===================================================================
+--- go_planet.php	2006-03-28 18:28:35 UTC (rev 39)
++++ go_planet.php	2006-03-28 19:40:42 UTC (rev 40)
+@@ -81,8 +81,6 @@
+ 
+ 	var $counter = 0;
+ 	var $post_limit;
+-
+-
+ 	
+ 
+ 	function RSS($chanfile,$limit) {
+@@ -223,6 +221,9 @@
+ 		if($this->isRSS||$this->isAtom) {
+ 			if($this->inEntry) {
+ 				$curID = $this->curID;
++				if($this->isEntryTitle) { 
++					if(!$this->rssData[$curID]["title"]) $this->rssData[$curID]["title"] = $data;
++				}
+ 				if($this->isDate) {
+ 					$this->rssData[$curID]["date"] = array();
+ 					if($this->isRSS) {
+@@ -256,9 +257,8 @@
+ 					}
+ 					
+ 				}
+-				if($this->isEntryTitle) $this->rssData[$curID]["title"] = $data;
++
+ 				if($this->isDiv) $this->rssData[$curID]["div"] .= $data;
+-
+ 				if($this->isAuthor) $this->rssData[$curID]["author"] = $data;
+ 				if($this->isLink) $this->rssData[$curID]["link"] = $data;
+ 			}
+
+
+

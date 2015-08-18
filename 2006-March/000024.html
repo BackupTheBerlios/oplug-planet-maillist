@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Oplug-planet] r26 - /
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/oplug-planet/2006-March/index.html" >
+   <LINK REL="made" HREF="mailto:oplug-planet%40lists.berlios.de?Subject=Re%3A%20%5BOplug-planet%5D%20r26%20-%20/&In-Reply-To=%3C20060324232821.22a3a19d.staszkoof%40gmail.com%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000022.html">
+   <LINK REL="Next"  HREF="000025.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Oplug-planet] r26 - /</H1>
+    <B>Martin</B> 
+    <A HREF="mailto:oplug-planet%40lists.berlios.de?Subject=Re%3A%20%5BOplug-planet%5D%20r26%20-%20/&In-Reply-To=%3C20060324232821.22a3a19d.staszkoof%40gmail.com%3E"
+       TITLE="[Oplug-planet] r26 - /">staszkoof at gmail.com
+       </A><BR>
+    <I>Fri Mar 24 23:28:21 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000022.html">[Oplug-planet] r26 - /
+</A></li>
+        <LI>Next message: <A HREF="000025.html">[Oplug-planet] r26 - /
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#24">[ date ]</a>
+              <a href="thread.html#24">[ thread ]</a>
+              <a href="subject.html#24">[ subject ]</a>
+              <a href="author.html#24">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>On Fri, 24 Mar 2006 22:58:43 +0100
+<A HREF="https://lists.berlios.de/mailman/listinfo/oplug-planet">citizen at berlios.de</A> wrote:
+
+&gt;<i> Author: citizen
+</I>&gt;<i> Date: 2006-03-24 22:58:41 +0100 (Fri, 24 Mar 2006)
+</I>&gt;<i> New Revision: 26
+</I>&gt;<i> 
+</I>&gt;<i> Modified:
+</I>&gt;<i>    go_planet.php
+</I>&gt;<i>    style.css
+</I>&gt;<i> Log:
+</I>&gt;<i> - upluwanie credits w go_planet
+</I>&gt;<i> - style do credits
+</I>&gt;<i> 
+</I>&gt;<i> 
+</I>&gt;<i> Modified: go_planet.php
+</I>&gt;<i> ===================================================================
+</I>&gt;<i> --- go_planet.php	2006-03-24 21:48:15 UTC (rev 25)
+</I>&gt;<i> +++ go_planet.php	2006-03-24 21:58:41 UTC (rev 26)
+</I>&gt;<i> @@ -38,8 +38,9 @@
+</I>&gt;<i>  	$a++;
+</I>&gt;<i>  }
+</I>&gt;<i>  
+</I>&gt;<i> -print &quot;&lt;br/&gt;RSS feed reader v&quot; . $rss-&gt;version . &quot; by OpLUG&lt;br/&gt;&quot;;
+</I>&gt;<i> -print &quot;RSS feed and Blogger Atom support&lt;br/&gt;&lt;br/&gt;&quot;;
+</I>&gt;<i> +print &quot;&lt;div class=\&quot;credits\&quot;&gt;&quot;;
+</I>&gt;<i> +$rss-&gt;print_credits();
+</I>&gt;<i> +print &quot;&lt;/div&gt;&quot;;
+</I>&gt;<i>  
+</I>&gt;<i>  ?&gt;
+</I>&gt;<i>  
+</I>&gt;<i> 
+</I>&gt;<i> Modified: style.css
+</I>&gt;<i> ===================================================================
+</I>&gt;<i> --- style.css	2006-03-24 21:48:15 UTC (rev 25)
+</I>&gt;<i> +++ style.css	2006-03-24 21:58:41 UTC (rev 26)
+</I>&gt;<i> @@ -46,21 +46,26 @@
+</I>&gt;<i>  	z-index: 1;	  	
+</I>&gt;<i>  }
+</I>&gt;<i>  
+</I>&gt;<i> -.notka {
+</I>&gt;<i> -	margin: 30px 0 30px 0;
+</I>&gt;<i> -}
+</I>&gt;<i> +	.notka {
+</I>&gt;<i> +		margin: 30px 0 30px 0;
+</I>&gt;<i> +	}
+</I>&gt;<i>  
+</I>&gt;<i> -	.notka .tytul {
+</I>&gt;<i> -		margin: 10px 0 4px 0;
+</I>&gt;<i> -		padding: 0;
+</I>&gt;<i> +		.notka .tytul {
+</I>&gt;<i> +			margin: 10px 0 4px 0;
+</I>&gt;<i> +			padding: 0;
+</I>&gt;<i> +		}
+</I>&gt;<i> +		
+</I>&gt;<i> +		.notka .data {
+</I>&gt;<i> +			margin-bottom: 20px;
+</I>&gt;<i> +		}
+</I>&gt;<i> +		
+</I>&gt;<i> +		.notka .tresc {
+</I>&gt;<i> +			padding-bottom: 30px;
+</I>&gt;<i> +			border-bottom: 1px solid #CCC;
+</I>&gt;<i> +			text-align: justify;
+</I>&gt;<i> +		}
+</I>&gt;<i> +		
+</I>&gt;<i> +	.credits {
+</I>&gt;<i> +		color: #999;
+</I>&gt;<i> +		text-align: right;
+</I>&gt;<i>  	}
+</I>&gt;<i> -	
+</I>&gt;<i> -	.notka .data {
+</I>&gt;<i> -		margin-bottom: 20px;
+</I>&gt;<i> -	}
+</I>&gt;<i> -	
+</I>&gt;<i> -	.notka .tresc {
+</I>&gt;<i> -		padding-bottom: 30px;
+</I>&gt;<i> -		border-bottom: 1px solid #CCC;
+</I>&gt;<i> -		text-align: justify;
+</I>&gt;<i> -	}
+</I>&gt;<i> 
+</I>&gt;<i> _______________________________________________
+</I>&gt;<i> Oplug-planet mailing list
+</I>&gt;<i> <A HREF="https://lists.berlios.de/mailman/listinfo/oplug-planet">Oplug-planet at lists.berlios.de</A>
+</I>&gt;<i> <A HREF="http://lists.berlios.de/mailman/listinfo/oplug-planet">http://lists.berlios.de/mailman/listinfo/oplug-planet</A>
+</I>
+
+Nice work :]
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000022.html">[Oplug-planet] r26 - /
+</A></li>
+	<LI>Next message: <A HREF="000025.html">[Oplug-planet] r26 - /
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#24">[ date ]</a>
+              <a href="thread.html#24">[ thread ]</a>
+              <a href="subject.html#24">[ subject ]</a>
+              <a href="author.html#24">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/oplug-planet">More information about the Oplug-planet
+mailing list</a><br>
+</body></html>

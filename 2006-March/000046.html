@@ -1,0 +1,298 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Oplug-planet] r37 - /
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/oplug-planet/2006-March/index.html" >
+   <LINK REL="made" HREF="mailto:oplug-planet%40lists.berlios.de?Subject=Re%3A%20%5BOplug-planet%5D%20r37%20-%20/&In-Reply-To=%3C200603281720.k2SHKZtk022837%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000051.html">
+   <LINK REL="Next"  HREF="000048.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Oplug-planet] r37 - /</H1>
+    <B>matador at BerliOS</B> 
+    <A HREF="mailto:oplug-planet%40lists.berlios.de?Subject=Re%3A%20%5BOplug-planet%5D%20r37%20-%20/&In-Reply-To=%3C200603281720.k2SHKZtk022837%40sheep.berlios.de%3E"
+       TITLE="[Oplug-planet] r37 - /">matador at berlios.de
+       </A><BR>
+    <I>Tue Mar 28 19:20:35 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000051.html">[Oplug-planet] r36 - /
+</A></li>
+        <LI>Next message: <A HREF="000048.html">[Oplug-planet] r38 - /
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#46">[ date ]</a>
+              <a href="thread.html#46">[ thread ]</a>
+              <a href="subject.html#46">[ subject ]</a>
+              <a href="author.html#46">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: matador
+Date: 2006-03-28 19:20:34 +0200 (Tue, 28 Mar 2006)
+New Revision: 37
+
+Removed:
+   rss_class.php
+Log:
+Usunalem niepotrzebny plik..
+
+
+Deleted: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-28 17:19:07 UTC (rev 36)
++++ rss_class.php	2006-03-28 17:20:34 UTC (rev 37)
+@@ -1,221 +0,0 @@
+-&lt;?php
+-// Klasa RSS umozliwia odczytywanie kanalow RSS i przetwarzanie interesujacych nas informacji na HTML.
+-// Na razie nie jest to duzo, ale od czegos trzeba zaczac...
+-
+-//Metody publiczne:
+-//	RSS($chanfile,$limit); - konstruktor; Jako parametr pobiera nazwe pliku z kanalami i liczbe postow z kanalu do pobrania
+-//	print_credits() - wyswietla info..
+-//	get_data_string($id) - wyswietla date posta o numerze $id..
+-//	get_title($id)
+-//	get_content($id)
+-//	get_short_content($id)
+-
+-class RSS {
+-	var $debug = true; // flaga zarezerwowana
+-
+-	var $url_base = &quot;<A HREF="http://linux.opole.pl/">http://linux.opole.pl/</A>&quot;;
+-	var $filename = &quot;index.html&quot;; // Plik do wygenerowania
+-	var $filename_short = &quot;planetka.php&quot;; // plik ze skrotami..
+-	var $channels = array(); // tablica kanalow do przegladniecia
+-	var $version = &quot;1.0&quot;;
+-
+-	var $RSSparser; // Maszynka do wyciagania informacji z RSS :]
+-
+-	var $rssVersion = 2.0;
+-	var $rssInfo = array(); // Info na temat feeda
+-	var $rssData = array(); // A tutaj wlasnie beda wszystkie informacje wyciagniete z RSS'a
+-
+-	var $curID = -1;
+-	var $inEntry = false;
+-	var $isDate = false;
+-	var $isEntryTitle = false;
+-	var $isDiv = false;
+-	var $isID = false;
+-	var $isAuthor = false;
+-
+-	var $isRSS = false;
+-	var $isAtom = false;
+-
+-	var $counter = 0;
+-	var $post_limit;
+-
+-
+-	
+-
+-	function RSS($chanfile,$limit) {
+-		$this-&gt;post_limit = $limit;
+-		$this-&gt;get_channels($chanfile);
+-
+-		$a=0;
+-
+-		while($this-&gt;channels[$a]!=null) {
+-			$this-&gt;counter = 0;
+-			ereg('^[A-Za-z0-9:\/\.\-]*',$this-&gt;channels[$a++],$chan);
+-			$this-&gt;parse($chan[0]);
+-		}
+-		
+-		$this-&gt;sort_posts();
+-
+-	}
+-
+-	function sort_posts() { // Sortowanie babelkowe :]
+-		$a = 0; $b = 0;
+-		while($a &lt;= $this-&gt;curID-1) {
+-			$b=0;
+-			while($b &lt;= $this-&gt;curID-1) {
+-				if($this-&gt;rssData[$b][&quot;date&quot;][&quot;num&quot;] &lt; $this-&gt;rssData[$b+1][&quot;date&quot;][&quot;num&quot;]) {
+-					$temp = $this-&gt;rssData[$b];
+-					$this-&gt;rssData[$b] = $this-&gt;rssData[$b+1];
+-					$this-&gt;rssData[$b+1] = $temp;
+-				}
+-			$b++;
+-			}
+-		$a++;
+-		}
+-	}
+-
+-	function print_credits() {
+-		print &quot;RSS feed reader v&quot; . $this-&gt;version . &quot; by OpLUG&lt;br/&gt;&quot;;
+-		print &quot;RSS feed and Blogger Atom support&lt;br/&gt;&quot;;
+-
+-	}
+-
+-
+-	function get_title($id) {
+-		return $this-&gt;rssData[$id][&quot;title&quot;];
+-	}
+-
+-	function get_author($id) {
+-		return $this-&gt;rssData[$id][&quot;author&quot;];
+-	}
+-
+-	function get_data_string($id) {
+-		//print $this-&gt;rssData[$id][&quot;date&quot;][&quot;num&quot;].&quot;&lt;br/&gt;&quot;;
+-		return $this-&gt;rssData[$id][&quot;date&quot;][&quot;day&quot;].&quot;/&quot;.$this-&gt;rssData[$id][&quot;date&quot;][&quot;month&quot;].&quot;/&quot;.$this-&gt;rssData[$id][&quot;date&quot;][&quot;year&quot;];
+-	}
+-
+-	function get_content($id) {
+-		return $this-&gt;rssData[$id][&quot;div&quot;];
+-	}
+-
+-	function get_channels($chanfile) {
+-		
+-		$this-&gt;channels = file($chanfile);
+-		if(!($this-&gt;channels[0])) die(&quot;Brak kanalow.. Sprawd&#378; plik &quot;.$chanfile.&quot;&lt;br/&gt;&quot;);
+-		
+-	}
+-
+-	function get_short_content($id) {
+-// Czeka na implementacje..
+-	}
+-
+-	function parse($channel) {
+-		$this-&gt;RSSparser = xml_parser_create();
+-		xml_set_element_handler($this-&gt;RSSparser,array(&amp;$this,&quot;startElement&quot;),array(&amp;$this,&quot;endElement&quot;));
+-		xml_set_character_data_handler($this-&gt;RSSparser, array(&amp;$this, &quot;XMLcharacterData&quot;));
+-		if (!($fp = fopen($channel, &quot;r&quot;))) {
+-  		 die(&quot;Nie moge otworzyc kanalu &quot;.$channel.&quot;. Zly adres???&quot;);
+-		}
+-
+-		while ($data = fread($fp, 4096)) {
+-   			if (!xml_parse($this-&gt;RSSparser, $data, feof($fp))) {
+-       			die(sprintf(&quot;Blad XML: %s at line %d&quot;,
+-                   xml_error_string(xml_get_error_code($this-&gt;RSSparser)),
+-                   xml_get_current_line_number($this-&gt;RSSparser)));
+-   			}
+-		}
+-		xml_parser_free($this-&gt;RSSparser);
+-	}
+-
+-	function startElement($parser, $name, $attrs) {
+-
+-		switch($name) {
+-			case &quot;RSS&quot; : $this-&gt;isRSS = true; break;
+-			case &quot;FEED&quot; : $this-&gt;isAtom = true; break;
+-			case &quot;ITEM&quot; :
+-			case &quot;ENTRY&quot; :
+-				{
+-					if($this-&gt;counter &gt;= $this-&gt;post_limit) break;
+-					$this-&gt;rssData[] = array(); $this-&gt;curID++; $this-&gt;inEntry = true; $this-&gt;counter++; break;
+-				}
+-			case &quot;TITLE&quot; : $this-&gt;isEntryTitle = true; break;
+-			case &quot;DESCRIPTION&quot; :
+-			case &quot;DIV&quot; : $this-&gt;isDiv = true; break;
+-			case &quot;PUBDATE&quot; :
+-			case &quot;CREATED&quot; : $this-&gt;isDate = true; break;
+-			case &quot;NAME&quot; :
+-			case &quot;AUTHOR&quot; : $this-&gt;isAuthor = true; break;
+-			case &quot;IMG&quot; : if($this-&gt;isAtom) $this-&gt;rssData[$this-&gt;curID][&quot;div&quot;] .= &quot;&lt;img src=\&quot;&quot;.$attrs[&quot;SRC&quot;].&quot;\&quot; alt=\&quot;\&quot;&gt;&quot;; break;
+-			case &quot;A&quot; : if($this-&gt;isAtom) $this-&gt;rssData[$this-&gt;curID][&quot;div&quot;] .= &quot;&lt;a href=\&quot;&quot;.$attrs[&quot;HREF&quot;].&quot;\&quot;&gt;&quot;; break;
+-		}
+- 
+-
+-	}
+-
+-	function endElement($parser, $name) {
+-		switch($name) {
+-			case &quot;BR&quot; : if($this-&gt;isAtom) $this-&gt;rssData[$this-&gt;curID][&quot;div&quot;] .= &quot;&lt;br/&gt;&quot;; break;
+-			case &quot;RSS&quot; : $this-&gt;isRSS = false; break;
+-			case &quot;FEED&quot; : $this-&gt;isAtom = false; break;
+-			case &quot;ITEM&quot; :
+-			case &quot;ENTRY&quot; : $this-&gt;inEntry = false; break;
+-			case &quot;TITLE&quot; : $this-&gt;isEntryTitle = false; break;
+-			case &quot;DESCRIPTION&quot; :
+-			case &quot;DIV&quot; : $this-&gt;isDiv = false; break;
+-			case &quot;PUBDATE&quot; :
+-			case &quot;CREATED&quot; : $this-&gt;isDate = false; break;
+-			case &quot;NAME&quot; :
+-			case &quot;AUTHOR&quot; : $this-&gt;isAuthor = false; break;
+-			case &quot;A&quot; : if($this-&gt;isAtom) $this-&gt;rssData[$this-&gt;curID][&quot;div&quot;] .= &quot;&lt;/a&gt;&quot;; break;
+-		}
+-	}
+-
+-	function XMLcharacterData($parser, $data){
+-		if($this-&gt;isRSS||$this-&gt;isAtom) {
+-			if($this-&gt;inEntry) {
+-				$curID = $this-&gt;curID;
+-				if($this-&gt;isDate) {
+-					$this-&gt;rssData[$curID][&quot;date&quot;] = array();
+-					if($this-&gt;isRSS) {
+-						$data = explode(&quot; &quot;,$data);
+-						$this-&gt;rssData[$curID][&quot;date&quot;][&quot;year&quot;] = $data[3];
+-						switch($data[2]) {
+-							case &quot;Jan&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;01&quot;; break;
+-							case &quot;Feb&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;02&quot;; break;
+-							case &quot;Mar&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;03&quot;; break;
+-							case &quot;Apr&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;04&quot;; break;
+-							case &quot;May&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;05&quot;; break;
+-							case &quot;Jun&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;06&quot;; break;
+-							case &quot;Jul&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;07&quot;; break;
+-							case &quot;Aug&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;08&quot;; break;
+-							case &quot;Sep&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;09&quot;; break;
+-							case &quot;Oct&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;10&quot;; break;
+-							case &quot;Nov&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;11&quot;; break;
+-							case &quot;Dec&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;12&quot;; break;
+-						}
+-						
+-						$this-&gt;rssData[$curID][&quot;date&quot;][&quot;day&quot;] = $data[1];
+-						$this-&gt;rssData[$curID][&quot;date&quot;][&quot;num&quot;] = $data[3].$this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;].$data[1];
+-					}else if($this-&gt;isAtom) {
+-						ereg('^[0-9\-]*',$data,$data);
+-						$data = explode(&quot;-&quot;,$data[0]);
+-						$this-&gt;rssData[$curID][&quot;date&quot;][&quot;year&quot;] = $data[0];
+-						$this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = $data[1];
+-						$this-&gt;rssData[$curID][&quot;date&quot;][&quot;day&quot;] = $data[2];
+-						$this-&gt;rssData[$curID][&quot;date&quot;][&quot;num&quot;] = $data[0].$data[1].$data[2];
+-
+-					}
+-					
+-				}
+-				if($this-&gt;isEntryTitle) $this-&gt;rssData[$curID][&quot;title&quot;] = $data;
+-				if($this-&gt;isDiv) $this-&gt;rssData[$curID][&quot;div&quot;] .= $data;
+-
+-				if($this-&gt;isAuthor) $this-&gt;rssData[$curID][&quot;author&quot;] = $data;
+-			}
+-		}
+-
+-	}
+-
+-}
+-
+-?&gt;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000051.html">[Oplug-planet] r36 - /
+</A></li>
+	<LI>Next message: <A HREF="000048.html">[Oplug-planet] r38 - /
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#46">[ date ]</a>
+              <a href="thread.html#46">[ thread ]</a>
+              <a href="subject.html#46">[ subject ]</a>
+              <a href="author.html#46">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/oplug-planet">More information about the Oplug-planet
+mailing list</a><br>
+</body></html>

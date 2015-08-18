@@ -1,0 +1,207 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Oplug-planet] r27 - /
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/oplug-planet/2006-March/index.html" >
+   <LINK REL="made" HREF="mailto:oplug-planet%40lists.berlios.de?Subject=Re%3A%20%5BOplug-planet%5D%20r27%20-%20/&In-Reply-To=%3C200603251132.k2PBWLrl031810%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000028.html">
+   <LINK REL="Next"  HREF="000033.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Oplug-planet] r27 - /</H1>
+    <B>matador at BerliOS</B> 
+    <A HREF="mailto:oplug-planet%40lists.berlios.de?Subject=Re%3A%20%5BOplug-planet%5D%20r27%20-%20/&In-Reply-To=%3C200603251132.k2PBWLrl031810%40sheep.berlios.de%3E"
+       TITLE="[Oplug-planet] r27 - /">matador at berlios.de
+       </A><BR>
+    <I>Sat Mar 25 12:32:21 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000028.html">[Oplug-planet] r26 - /
+</A></li>
+        <LI>Next message: <A HREF="000033.html">[Oplug-planet] r27 - /
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#29">[ date ]</a>
+              <a href="thread.html#29">[ thread ]</a>
+              <a href="subject.html#29">[ subject ]</a>
+              <a href="author.html#29">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: matador
+Date: 2006-03-25 12:32:19 +0100 (Sat, 25 Mar 2006)
+New Revision: 27
+
+Modified:
+   go_planet.php
+   rss_class.php
+Log:
+Ujednolicenia daty dla obydwu na razie wspieranych systemow blogowych
+
+
+Modified: go_planet.php
+===================================================================
+--- go_planet.php	2006-03-24 21:58:41 UTC (rev 26)
++++ go_planet.php	2006-03-25 11:32:19 UTC (rev 27)
+@@ -25,14 +25,14 @@
+ 
+ require_once(&quot;rss_class.php&quot;);
+ 
+-$rss = new RSS();
++$rss = new RSS(&quot;channels.rss&quot;);
+ 
+ $a=0;
+ 
+ while($a&lt;=$rss-&gt;curID) {
+ 	print &quot;&lt;div class=\&quot;notka\&quot;&gt;&quot;;
+ 	print &quot;&lt;h2 class=\&quot;tytul\&quot;&gt;&quot;.$rss-&gt;rssData[$a][&quot;title&quot;].&quot;&lt;/h2&gt;&quot;;
+-	print &quot;&lt;div class=\&quot;data\&quot;&gt;&quot;.$rss-&gt;rssData[$a][&quot;date&quot;].&quot;&lt;/div&gt;&quot;;
++	print &quot;&lt;div class=\&quot;data\&quot;&gt;&quot;.$rss-&gt;get_data_string($a).&quot;&lt;/div&gt;&quot;;
+ 	print &quot;&lt;div class=\&quot;tresc\&quot;&gt;&quot;.$rss-&gt;rssData[$a][&quot;div&quot;].&quot;&lt;/div&gt;&quot;;
+ 	print &quot;&lt;/div&gt;&quot;;
+ 	$a++;
+
+Modified: rss_class.php
+===================================================================
+--- rss_class.php	2006-03-24 21:58:41 UTC (rev 26)
++++ rss_class.php	2006-03-25 11:32:19 UTC (rev 27)
+@@ -11,7 +11,6 @@
+ 	var $url_base = &quot;<A HREF="http://linux.opole.pl/">http://linux.opole.pl/</A>&quot;;
+ 	var $filename = &quot;index.html&quot;; // Plik do wygenerowania
+ 	var $filename_short = &quot;planetka.php&quot;; // plik ze skrotami..
+-	var $chanfile = &quot;channels.rss&quot;; // plik z kanalami w postaci URL
+ 	var $channels = array(); // tablica kanalow do przegladniecia
+ 	var $version = &quot;1.0&quot;;
+ 
+@@ -28,12 +27,13 @@
+ 	var $isDiv = false;
+ 	var $isID = false;
+ 
+-	var $isOnet = false;
++	var $isRSS = false;
++	var $isAtom = false;
+ 
+ 	
+ 
+-	function RSS() {
+-		$this-&gt;get_channels($this-&gt;chanfile);
++	function RSS($chanfile) {
++		$this-&gt;get_channels($chanfile);
+ 
+ 		$a=0;
+ 
+@@ -50,8 +50,8 @@
+ 
+ 	}
+ 
+-	function print_post($id) {
+-		
++	function get_data_string($id) {
++		return $this-&gt;rssData[$id][&quot;date&quot;][&quot;day&quot;].&quot;/&quot;.$this-&gt;rssData[$id][&quot;date&quot;][&quot;month&quot;].&quot;/&quot;.$this-&gt;rssData[$id][&quot;date&quot;][&quot;year&quot;];
+ 	}
+ 
+ 	function get_channels($chanfile) {
+@@ -82,6 +82,8 @@
+ 	function startElement($parser, $name, $attrs) {
+ 
+ 		switch($name) {
++			case &quot;RSS&quot; : $this-&gt;isRSS = true; break;
++			case &quot;FEED&quot; : $this-&gt;isAtom = true; break;
+ 			case &quot;ITEM&quot; :
+ 			case &quot;ENTRY&quot; : $this-&gt;rssData[] = array(); $this-&gt;curID++; $this-&gt;inEntry = true; break;
+ 			case &quot;TITLE&quot; : $this-&gt;isEntryTitle = true; break;
+@@ -96,6 +98,8 @@
+ 
+ 	function endElement($parser, $name) {
+ 		switch($name) {
++			case &quot;RSS&quot; : $this-&gt;isRSS = false; break;
++			case &quot;FEED&quot; : $this-&gt;isAtom = false; break;
+ 			case &quot;ITEM&quot; :
+ 			case &quot;ENTRY&quot; : $this-&gt;inEntry = false; break;
+ 			case &quot;TITLE&quot; : $this-&gt;isEntryTitle = false; break;
+@@ -107,16 +111,45 @@
+ 	}
+ 
+ 	function XMLcharacterData($parser, $data){
+-		if($this-&gt;inEntry) {
+-			$curID = $this-&gt;curID;
+-			if($this-&gt;isDate) {
+-				$data = str_replace(&quot;T&quot;,&quot; &quot;,$data);
+-				$data = str_replace(&quot;Z&quot;,&quot; &quot;,$data);
+-				$this-&gt;rssData[$curID][&quot;date&quot;] = $data;
++		if($this-&gt;isRSS||$this-&gt;isAtom) {
++			if($this-&gt;inEntry) {
++				$curID = $this-&gt;curID;
++				if($this-&gt;isDate) {
++					$this-&gt;rssData[$curID][&quot;date&quot;] = array();
++					if($this-&gt;isRSS) {
++						$data = explode(&quot; &quot;,$data);
++						$this-&gt;rssData[$curID][&quot;date&quot;][&quot;year&quot;] = $data[3];
++						switch($data[2]) {
++							case &quot;Jan&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;01&quot;; break;
++							case &quot;Feb&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;02&quot;; break;
++							case &quot;Mar&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;03&quot;; break;
++							case &quot;Apr&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;04&quot;; break;
++							case &quot;May&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;05&quot;; break;
++							case &quot;Jun&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;06&quot;; break;
++							case &quot;Jul&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;07&quot;; break;
++							case &quot;Aug&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;08&quot;; break;
++							case &quot;Sep&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;09&quot;; break;
++							case &quot;Oct&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;10&quot;; break;
++							case &quot;Nov&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;11&quot;; break;
++							case &quot;Dec&quot; : $this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = &quot;12&quot;; break;
++						}
++						
++						$this-&gt;rssData[$curID][&quot;date&quot;][&quot;day&quot;] = $data[1];
++					}else if($this-&gt;isAtom) {
++						ereg('^[0-9\-]*',$data,$data);
++						$data = explode(&quot;-&quot;,$data[0]);
++						$this-&gt;rssData[$curID][&quot;date&quot;][&quot;year&quot;] = $data[0];
++						$this-&gt;rssData[$curID][&quot;date&quot;][&quot;month&quot;] = $data[1];
++						$this-&gt;rssData[$curID][&quot;date&quot;][&quot;day&quot;] = $data[2];
++
++					}
++					
++				}
++				if($this-&gt;isEntryTitle) $this-&gt;rssData[$curID][&quot;title&quot;] = $data;
++				if($this-&gt;isDiv) $this-&gt;rssData[$curID][&quot;div&quot;] .= $data;
+ 			}
+-			if($this-&gt;isEntryTitle) $this-&gt;rssData[$curID][&quot;title&quot;] = $data;
+-			if($this-&gt;isDiv) $this-&gt;rssData[$curID][&quot;div&quot;] .= $data;
+ 		}
++
+ 	}
+ 
+ }
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000028.html">[Oplug-planet] r26 - /
+</A></li>
+	<LI>Next message: <A HREF="000033.html">[Oplug-planet] r27 - /
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#29">[ date ]</a>
+              <a href="thread.html#29">[ thread ]</a>
+              <a href="subject.html#29">[ subject ]</a>
+              <a href="author.html#29">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/oplug-planet">More information about the Oplug-planet
+mailing list</a><br>
+</body></html>
